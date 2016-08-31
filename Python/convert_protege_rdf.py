@@ -26,6 +26,10 @@ from lib.datastore import DataStore
 from lib import my_env
 import xml.etree.ElementTree as Et
 
+ignore_rel_types = ["heeft_dossiertype",
+                    "heeft_procedurestap",
+                    "heeft_stap"]
+
 
 def strip_rdf(rdf, name):
     """
@@ -79,7 +83,11 @@ def handle_instances(cfg):
                 rel = {"rel_type": strip_rdf(rdf_value, child.tag),
                        "source":   rowdict["protege_id"],
                        "target":   strip_rdf(rdf_prot_id, child.attrib[resource_key])}
-                ds.insert_row("relations", rel)
+                if rel["rel_type"] in ignore_rel_types:
+                    logging.debug("Ignore relation type {rt} for {pi}"
+                                  .format(rt=rel["rel_type"], pi=rowdict["protege_id"]))
+                else:
+                    ds.insert_row("relations", rel)
             else:
                 # No attributes, so this is key/value with value longer than in element attribute
                 # This can be label as well, in which case it can be ignored

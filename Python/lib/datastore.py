@@ -79,7 +79,6 @@ class DataStore:
                 return False
             else:
                 logging.info("Clear table {table}".format(table=table))
-                return True
 
     def remove_tables(self):
         for table in self.tables:
