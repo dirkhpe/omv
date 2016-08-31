@@ -106,7 +106,7 @@ class DataStore:
             (id integer primary key autoincrement,
              naam text,
              class text,
-             protege_id text,
+             protege_id text unique,
              beschrijving text,
              formaat text,
              identifier text,
