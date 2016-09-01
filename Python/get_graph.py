@@ -4,6 +4,7 @@ and walk-down.
 """
 
 import logging
+from graphviz import Digraph
 from lib import datastore
 from lib import my_env
 
@@ -16,13 +17,31 @@ def go_down(item):
     @return:
     """
     item_list = ds.go_down(item)
-
+    for attribs in item_list:
+        logging.debug("Source: {s}, Relation Type: {rt}, Naam: {n}"
+                      .format(s=attribs["source"], rt=attribs["rel_type"], n=attribs["naam"]))
+        dot.edge(attribs["source"], item, label=attribs["rel_type"])
+        if attribs["source"] not in item_list:
+            # New item, add node and relation, explore item
+            items.append(attribs["source"])
+            dot.node(attribs["source"], attribs["naam"])
+            go_down(attribs["source"])
 
 
 if __name__ == "__main__":
+    items = []
     cfg = my_env.init_env("convert_protege", __file__)
     ds = datastore.DataStore(cfg)
     center = "Structuur_Class30023"
-    # go_up(center)
-    go_down(center)
+    # Get Node attributes
+    center_rec = ds.get_comp_attribs(center)
+    if center_rec is None:
+        logging.error("No component record found for {c}.".format(c=center))
+    else:
+        items.append(center)
+        dot = Digraph(comment="Overzicht voor {n}".format(n=center_rec["naam"]))
+        dot.node(center, center_rec["naam"])
+        # go_up(center)
+        go_down(center)
+        dot.render("c:/temp/test.gv", view=True)
     logging.info('End Application')

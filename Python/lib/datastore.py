@@ -42,6 +42,9 @@ class DataStore:
             return
         else:
             logging.debug("Datastore object and cursor are created")
+            # Now throw in Row factory so that we can use key/value based records
+            # fetchone, fetchall will return tuples that can be accessed on key.
+            db_conn.row_factory = sqlite3.Row
             return db_conn, db_conn.cursor()
 
     def close_connection(self):
@@ -187,3 +190,31 @@ class DataStore:
             logging.error(log_msg, e, ec)
             return False
         return
+
+    def go_down(self, item):
+        """
+        This method will get an item (Protege ID) and find all items further down the hierarchy. So item is
+        target. Return will be list of tuples (source, relation type, naam).
+        @param item: ProtegeID of the start item.
+        @return: list of tuples (source item, relation type, naam).
+        """
+        query = """
+                SELECT source, rel_type, naam
+                FROM relations
+                JOIN components ON source=protege_id
+                WHERE target=?
+                """
+        self.cur.execute(query, (item,))
+        res = self.cur.fetchall()
+        return res
+
+    def get_comp_attribs(self, item):
+        """
+        This method will read the component table for the item.
+        @param item: Protege ID of the item to search for.
+        @return: Single sequence of attributes, or none.
+        """
+        query = "SELECT * FROM components WHERE protege_id=?"
+        self.cur.execute(query, (item,))
+        res = self.cur.fetchone()
+        return res
