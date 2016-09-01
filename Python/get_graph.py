@@ -18,21 +18,51 @@ def go_down(item):
     """
     item_list = ds.go_down(item)
     for attribs in item_list:
-        logging.debug("Source: {s}, Relation Type: {rt}, Naam: {n}"
-                      .format(s=attribs["source"], rt=attribs["rel_type"], n=attribs["naam"]))
-        dot.edge(attribs["source"], item, label=attribs["rel_type"])
-        if attribs["source"] not in item_list:
-            # New item, add node and relation, explore item
-            items.append(attribs["source"])
-            dot.node(attribs["source"], attribs["naam"])
-            go_down(attribs["source"])
+        # logging.debug("Source: {s}, Relation Type: {rt}, Naam: {n}"
+        #               .format(s=attribs["source"], rt=attribs["rel_type"], n=attribs["naam"]))
+        # Calculate relationship
+        rel = "{s};{r};{t}".format(s=attribs["source"], r=attribs["rel_type"], t=item)
+        if rel not in item_rels:
+            # New relation, add it to the graph
+            item_rels.append(rel)
+            dot.edge(attribs["source"], item, label=attribs["rel_type"])
+            if attribs["source"] not in item_list:
+                # New item, add node and relation, explore item
+                items.append(attribs["source"])
+                dot.node(attribs["source"], attribs["naam"])
+                go_down(attribs["source"])
+
+
+def go_up(item):
+    """
+    This function will collect all items for which this item is lower in hierarchy.
+    So item is source, find all targets.
+    @param item:
+    @return:
+    """
+    item_list = ds.go_up(item)
+    for attribs in item_list:
+        # logging.debug("Source: {s}, Relation Type: {rt}, Naam: {n}"
+        #               .format(s=attribs["source"], rt=attribs["rel_type"], n=attribs["naam"]))
+        # Calculate relationship
+        rel = "{s};{r};{t}".format(t=attribs["target"], r=attribs["rel_type"], s=item)
+        if rel not in item_rels:
+            # New relation, add it to the graph
+            item_rels.append(rel)
+            dot.edge(item, attribs["target"], label=attribs["rel_type"])
+            if attribs["target"] not in item_list:
+                # New item, add node and relation, explore item
+                items.append(attribs["target"])
+                dot.node(attribs["target"], attribs["naam"])
+                go_up(attribs["target"])
 
 
 if __name__ == "__main__":
     items = []
+    item_rels = []
     cfg = my_env.init_env("convert_protege", __file__)
     ds = datastore.DataStore(cfg)
-    center = "Structuur_Class30023"
+    center = "struct_Class30035"
     # Get Node attributes
     center_rec = ds.get_comp_attribs(center)
     if center_rec is None:
@@ -40,8 +70,9 @@ if __name__ == "__main__":
     else:
         items.append(center)
         dot = Digraph(comment="Overzicht voor {n}".format(n=center_rec["naam"]))
+        dot.graph_attr['rankdir'] = 'RL'
         dot.node(center, center_rec["naam"])
-        # go_up(center)
+        go_up(center)
         go_down(center)
         dot.render("c:/temp/test.gv", view=True)
     logging.info('End Application')

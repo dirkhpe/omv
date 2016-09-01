@@ -194,7 +194,8 @@ class DataStore:
     def go_down(self, item):
         """
         This method will get an item (Protege ID) and find all items further down the hierarchy. So item is
-        target. Return will be list of tuples (source, relation type, naam).
+        target. Return will be list of tuples (source, relation type, naam). But it can be accessed using dictionary
+        since row_factory has been set to the cursor.
         @param item: ProtegeID of the start item.
         @return: list of tuples (source item, relation type, naam).
         """
@@ -203,6 +204,25 @@ class DataStore:
                 FROM relations
                 JOIN components ON source=protege_id
                 WHERE target=?
+                """
+        logging.debug("{q} - {i}".format(q=query, i=item))
+        self.cur.execute(query, (item,))
+        res = self.cur.fetchall()
+        return res
+
+    def go_up(self, item):
+        """
+        This method will get an item (Protege ID) and find all items further up the hierarchy. So item is
+        source. Return will be list of tuples (source, relation type, naam). But it can be accessed using dictionary
+        since row_factory has been set to the cursor.
+        @param item: ProtegeID of the start item.
+        @return: list of tuples (target item, relation type, naam).
+        """
+        query = """
+                SELECT target, rel_type, naam
+                FROM relations
+                JOIN components ON target=protege_id
+                WHERE source=?
                 """
         self.cur.execute(query, (item,))
         res = self.cur.fetchall()
