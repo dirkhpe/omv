@@ -205,7 +205,7 @@ class DataStore:
                 JOIN components ON source=protege_id
                 WHERE target=?
                 """
-        logging.debug("{q} - {i}".format(q=query, i=item))
+        # logging.debug("{q} - {i}".format(q=query, i=item))
         self.cur.execute(query, (item,))
         res = self.cur.fetchall()
         return res
@@ -224,6 +224,7 @@ class DataStore:
                 JOIN components ON target=protege_id
                 WHERE source=?
                 """
+        # logging.debug("{q} - {i}".format(q=query, i=item))
         self.cur.execute(query, (item,))
         res = self.cur.fetchall()
         return res
