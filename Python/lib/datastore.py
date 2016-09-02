@@ -199,8 +199,9 @@ class DataStore:
         @param item: ProtegeID of the start item.
         @return: list of tuples (source item, relation type, naam).
         """
+        # SELECT source, rel_type, naam
         query = """
-                SELECT source, rel_type, naam
+                SELECT *
                 FROM relations
                 JOIN components ON source=protege_id
                 WHERE target=?
@@ -218,8 +219,9 @@ class DataStore:
         @param item: ProtegeID of the start item.
         @return: list of tuples (target item, relation type, naam).
         """
+        # SELECT target, rel_type, naam
         query = """
-                SELECT target, rel_type, naam
+                SELECT *
                 FROM relations
                 JOIN components ON target=protege_id
                 WHERE source=?
