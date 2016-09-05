@@ -241,3 +241,23 @@ class DataStore:
         self.cur.execute(query, (item,))
         res = self.cur.fetchone()
         return res
+
+    def get_components(self):
+        """
+        This method will return all components with all attributes from the components table 'in_bereik'.
+        @return: Array of components. Each component is a dictionary of the array.
+        """
+        query = "SELECT * FROM components"
+        self.cur.execute(query)
+        rows = self.cur.fetchall()
+        return rows
+
+    def get_relations(self):
+        """
+        This method will return all relations from the relations table.
+        @return: Array of relations. Each relation is a dictionary of the array.
+        """
+        query = "SELECT * FROM relations"
+        self.cur.execute(query)
+        rows = self.cur.fetchall()
+        return rows
