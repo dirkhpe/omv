@@ -103,15 +103,17 @@ class DataStore:
 
     def create_table_components(self):
         # Create table
+        # Get the field names from Protege - Slots, where Value Type is not Instance.
+        # class and protege_id are fixed and should always be there.
         query = """
         CREATE TABLE components
             (id integer primary key autoincrement,
              naam text,
              class text,
              protege_id text unique,
-             beschrijving text,
-             formaat text,
-             identifier text,
+             commentaar text,
+             decreet_artikel text,
+             decreet_inhoud text,
              in_bereik text)
         """
         try:
@@ -205,6 +207,8 @@ class DataStore:
                 FROM relations
                 JOIN components ON source=protege_id
                 WHERE target=?
+                AND rel_type not like '%gebeurtenis%'
+                AND NOT rel_type = 'in_procedurestap'
                 """
         # logging.debug("{q} - {i}".format(q=query, i=item))
         self.cur.execute(query, (item,))
@@ -225,6 +229,8 @@ class DataStore:
                 FROM relations
                 JOIN components ON target=protege_id
                 WHERE source=?
+                AND rel_type not like '%gebeurtenis%'
+                AND NOT rel_type = 'in_procedurestap'
                 """
         # logging.debug("{q} - {i}".format(q=query, i=item))
         self.cur.execute(query, (item,))
@@ -261,3 +267,14 @@ class DataStore:
         self.cur.execute(query)
         rows = self.cur.fetchall()
         return rows
+
+    def get_components_type(self, comp_type='Dossiertype'):
+        """
+        This method will return all components of a specific type (class).
+        @param comp_type: Class (type) for which list of components is required. Default: 'Dossiertype'.
+        @return: List of Protege IDs of the components.
+        """
+        query = "SELECT protege_id FROM components WHERE class = ?"
+        self.cur.execute(query, (comp_type,))
+        rows = self.cur.fetchall()
+        return [dt['protege_id'] for dt in rows]
