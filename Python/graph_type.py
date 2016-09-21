@@ -1,8 +1,8 @@
 """
-This script will get the graph starting from an object. Relations are in bottom-up direction. There will be an walk-up
-and walk-down.
+This script will get the explorer-like graph for a type. It will get the type and calculate the path down.
 """
 
+import argparse
 import logging
 import os
 from graphviz import Digraph
@@ -75,39 +75,32 @@ def go_down(item, branch, level):
     for attribs in item_list:
         item_label = "{br}.{s}".format(br=branch, s=attribs["source"])
         eapp = get_edge_app(attribs["rel_type"])
-        dot.edge(item_label, item, label=attribs["rel_type"], **eapp)
+        dot.edge(item_label, branch, label=attribs["rel_type"], **eapp)
         if item_label not in items:
             # New item, add node and relation, explore item
             items.append(item_label)
             napp = get_node_app(attribs["class"])
             dot.node(item_label, attribs["naam"], **napp)
-            if level < 2:
+            if level < args.depth:
                 go_down(attribs["source"], item_label, level)
 
 
-def go_up(item):
-    """
-    This function will collect all items for which this item is lower in hierarchy.
-    So item is source, find all targets.
-    @param item:
-    @return:
-    """
-    item_list = ds.go_up(item)
-    for attribs in item_list:
-        eapp = get_edge_app(attribs["rel_type"])
-        dot.edge(item, attribs["target"], label=attribs["rel_type"], **eapp)
-        if attribs["target"] not in items:
-            # New item, add node and relation, explore item
-            items.append(attribs["target"])
-            napp = get_node_app(attribs["class"])
-            dot.node(attribs["target"], attribs["naam"], **napp)
-            go_up(attribs["target"])
-
-
 if __name__ == "__main__":
+    # Configure Command line arguments
+    parser = argparse.ArgumentParser(
+            description="Script to create a explorer-like graph for components in 'Omgevingsvergunning' Archief"
+    )
+    parser.add_argument('-t', '--type', default='Dossiertype',
+                        help='Set the component type to start with. Default is "Dossiertype".',
+                        choices=['Dossiertype', 'Procedure', 'ProcedureStap', 'Document'])
+    parser.add_argument('-d', '--depth', type=int, default=2,
+                        help="Set the depth of the graph (default=2). Note that values above 3 don't result "
+                             "in readable graphs.")
+    args = parser.parse_args()
+    cfg = my_env.init_env("convert_protege", __file__)
+    logging.info("Arguments: {a}".format(a=args))
     # items is the list of components that have been handled.
     items = []
-    cfg = my_env.init_env("convert_protege", __file__)
     ds = datastore.DataStore(cfg)
     # Configure Graph
     dot = Digraph(comment="Overzicht van de structuur.")
@@ -115,8 +108,8 @@ if __name__ == "__main__":
     dot.graph_attr['rankdir'] = 'RL'
     dot.graph_attr['bgcolor'] = "#ffffff"
     dot.node_attr['style'] = 'rounded'
-    # Get Protege IDs for the Dossier Types
-    component_list = ds.get_components_type('ProcedureStap')
+    # Get Protege IDs for the required types
+    component_list = ds.get_components_type(args.type)
     for comp in component_list:
         # Get Node/Component attributes
         comp_rec = ds.get_comp_attribs(comp)
@@ -126,12 +119,9 @@ if __name__ == "__main__":
             items.append(comp)
             node_app = get_node_app(comp_rec["class"])
             dot.node(comp, comp_rec["naam"], **node_app)
-            # go_up(comp)
             go_down(comp, branch=comp, level=1)
     # Now create and show the graph
-    graphfile = os.path.join(cfg["Main"]["graphdir"], 'ProcedureStap_Document')
-    sourcefile = os.path.join(cfg["Main"]["graphdir"], 'source.txt')
+    fid = "{t}_{d}".format(t=args.type, d=args.depth)
+    graphfile = os.path.join(cfg["Main"]["graphdir"], fid)
     dot.render(graphfile, view=True)
-    fh = open(sourcefile, 'w')
-    fh.write(dot.source)
     logging.info('End Application')

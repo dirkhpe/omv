@@ -99,7 +99,8 @@ def get_inifile(projectname, scriptname):
     else:
         # Running Live
         (filepath, filename) = os.path.split(scriptname)
-        configfile = filepath + "/properties/" + projectname + ".ini"
+        # configfile = filepath + "/properties/" + projectname + ".ini"
+        configfile = os.path.join(filepath, 'properties', "{p}.ini".format(p=projectname))
     ini_config = configparser.ConfigParser()
     try:
         ini_config.read_file(open(configfile))
