@@ -1,5 +1,5 @@
 """
-This class consolidates functions related to the local datastore.
+This class consolidates functions related to the local mysql datastore.
 """
 
 import logging
