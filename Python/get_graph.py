@@ -33,13 +33,21 @@ def get_node_app(node_class):
     @param node_class: Class of the Node
     @return: dictionary to define appearance of the node
     """
-    if node_class == "DossierStuk":
+    if node_class == "Document":
         node_appearance = {'fillcolor': "#EAD800",
                            'shape': "box",
                            'style': "filled"}
-    elif node_class == "DossierMap":
+    elif node_class == "ProcedureStap":
         node_appearance = {'fillcolor': "#B3801C",
                            'shape': "box",
+                           'style': "filled"}
+    elif node_class == "Procedure":
+        node_appearance = {'fillcolor': "#EAD800",
+                           'shape': "box",
+                           'style': "filled"}
+    elif node_class == "Dossiertype":
+        node_appearance = {'fillcolor': "#DC3800",
+                           'shape': "egg",
                            'style': "filled"}
     else:
         logging.error("Node Class {nc} not defined.".format(nc=node_class))
@@ -110,4 +118,6 @@ if __name__ == "__main__":
         go_down(center)
         graphfile = os.path.join(cfg["Main"]["graphdir"], center)
         dot.render(graphfile, view=True)
+        dot.save("{}.dot".format(center), cfg["Main"]["graphdir"])
+
     logging.info('End Application')

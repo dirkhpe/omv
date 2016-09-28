@@ -26,9 +26,10 @@ from lib.datastore import DataStore
 from lib import my_env
 import xml.etree.ElementTree as Et
 
-ignore_rel_types = ["heeft_dossiertype",
-                    "heeft_procedurestap",
-                    "heeft_stap"]
+# ignore_rel_types = ["heeft_dossiertype",
+#                     "heeft_procedurestap",
+#                     "heeft_stap"]
+ignore_rel_types = []
 
 
 def strip_rdf(rdf, name):
@@ -45,6 +46,23 @@ def strip_rdf(rdf, name):
         logging.error("*{rdf}* expected, but not found: *{name}*".format(rdf=rdf, name=name))
         short_name = "Undefined"
     return short_name
+
+
+def strip_name_id(name):
+    """
+    This function will strip name identifier from Protege Name. The name identifier is terminated with ' * '. This is
+    used to group items in the protege overview.
+    @param name:
+    @return:
+    """
+    delim = " * "
+    logging.warning("Trying to clean: {}".format(name))
+    if name.find(delim) > 0:
+        rem_length = name.find(delim) + len(delim)
+        logging.warning("about to return: {}".format(name[rem_length:]))
+        return name[rem_length:]
+    else:
+        return name
 
 
 def handle_instances(cfg):
@@ -94,6 +112,11 @@ def handle_instances(cfg):
                 # So check on rdf_value only
                 if rdf_value == child.tag[0:len(rdf_value)]:
                     rowdict[strip_rdf(rdf_value, child.tag)] = child.text
+        # Check to remove identifier from naam:
+        try:
+            rowdict['naam'] = strip_name_id(rowdict["naam"])
+        except KeyError:
+            pass
         ds.insert_row("components", rowdict)
 
 

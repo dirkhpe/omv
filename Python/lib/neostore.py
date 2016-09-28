@@ -83,7 +83,7 @@ class NeoStore:
         query = """
                 MATCH (l:{l})-[:heeft_deel]->(r)
                 WHERE '{bl}' in labels(l)
-                RETURN l.label as llabel, r.label as rlabel, id(l) as lid, id(r) as rid, r.nr as rnr
+                RETURN l.label as llabel, r.label as rlabel, id(l) as lid, id(r) as rid, r.nr as rnr, r.pagina as pagina
                 ORDER BY l.nr, r.nr
                 """.format(l=left, bl=blabel)
         dnt = DataFrame(self.graph.run(query).data())
@@ -98,8 +98,20 @@ class NeoStore:
         query = """
                 MATCH (l)-[:heeft_deel]->(r)
                 WHERE id(l)={left_id}
-                RETURN l.label as llabel, r.label as rlabel, id(l) as lid, id(r) as rid, r.nr as rnr
+                RETURN l.label as llabel, r.label as rlabel, id(l) as lid, id(r) as rid, r.nr as rnr,
+                       r.pagina as pagina
                 ORDER BY l.nr, r.nr
                 """.format(left_id=left_id)
+        logging.debug(query)
         dnt = DataFrame(self.graph.run(query).data())
         return dnt
+
+    def remove_prot(self):
+        """
+        This function will remove all nodes and relations that come from Protege.
+        @return:
+        """
+        logging.debug("Remove Nodes and Relations from Protege")
+        query = "MATCH (n) WHERE  'Protege' IN labels(n) DETACH DELETE n"
+        self.graph.run(query)
+        return

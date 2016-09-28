@@ -112,8 +112,14 @@ class DataStore:
              class text,
              protege_id text unique,
              commentaar text,
-             decreet_artikel text,
-             decreet_inhoud text,
+             afdeling text,
+             artikel text,
+             bladzijde text,
+             hoofdstuk text,
+             onderafdeling text,
+             titel text,
+             titel_item text,
+             url text,
              in_bereik text)
         """
         try:
