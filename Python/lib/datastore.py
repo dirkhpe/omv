@@ -215,6 +215,7 @@ class DataStore:
                 WHERE target=?
                 AND rel_type not like '%gebeurtenis%'
                 AND NOT rel_type = 'in_procedurestap'
+                AND NOT rel_type = 'bij_procedurestap'
                 """
         # logging.debug("{q} - {i}".format(q=query, i=item))
         self.cur.execute(query, (item,))

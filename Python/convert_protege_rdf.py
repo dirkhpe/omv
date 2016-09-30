@@ -56,10 +56,8 @@ def strip_name_id(name):
     @return:
     """
     delim = " * "
-    logging.warning("Trying to clean: {}".format(name))
     if name.find(delim) > 0:
         rem_length = name.find(delim) + len(delim)
-        logging.warning("about to return: {}".format(name[rem_length:]))
         return name[rem_length:]
     else:
         return name

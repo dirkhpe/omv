@@ -114,7 +114,7 @@ if __name__ == "__main__":
         dot.node_attr['style'] = 'rounded'
         node_app = get_node_app(center_rec["class"])
         dot.node(center, center_rec["naam"], **node_app)
-        go_up(center)
+        # go_up(center)
         go_down(center)
         graphfile = os.path.join(cfg["Main"]["graphdir"], center)
         dot.render(graphfile, view=True)
