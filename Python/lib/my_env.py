@@ -113,6 +113,24 @@ def get_inifile(projectname, scriptname):
     return ini_config
 
 
+def aanleg(ela):
+    """
+    This function will get 'aanleg' string and will extract 'Eerste Aanleg' or 'Laatste Aanleg' from it - or
+    an error ('Aanleg niet gevonden').
+    @param ela:
+    @return: 'Eerste Aanleg', 'Laatste Aanleg', 'Aanleg niet gevonden'
+    """
+    eerste = 'Eerste Aanleg'
+    laatste = 'Laatste Aanleg'
+    if eerste in ela:
+        return eerste
+    elif laatste in ela:
+        return laatste
+    else:
+        logging.error("Aanleg not found in {a}".format(a=ela))
+        return "Aanleg onbekend"
+
+
 class LoopInfo:
     """
     This class handles a FOR loop information handling.

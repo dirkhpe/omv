@@ -17,10 +17,12 @@ def get_edge_app(rel_type):
     @param rel_type: Type of the relation
     @return: dictionary to define appearance of the edge.
     """
-    if rel_type == "stuk_in_map":
+    if rel_type == "voor_dossiertype":
         edge_appearance = {'color': "#DC3800"}
-    elif rel_type == "deelmap_van":
+    elif rel_type == "in_procedure":
         edge_appearance = {'color': "#75B095"}
+    elif rel_type == "bij_procedurestap":
+        edge_appearance = {'color': "#DC3800"}
     else:
         logging.error("Relation Type {rt} not defined.".format(rt=rel_type))
         edge_appearance = {'color': "#000000"}
@@ -41,7 +43,7 @@ def get_node_app(node_class):
         node_appearance = {'fillcolor': "#B3801C",
                            'shape': "box",
                            'style': "filled"}
-    elif node_class == "Procedure":
+    elif node_class == "ProcedureFase":
         node_appearance = {'fillcolor': "#EAD800",
                            'shape': "box",
                            'style': "filled"}

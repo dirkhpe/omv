@@ -4,7 +4,6 @@ This class consolidates functions related to the local mysql datastore.
 
 import logging
 import sqlite3
-import sys
 
 
 class DataStore:
@@ -32,20 +31,10 @@ class DataStore:
         """
         logging.debug("Creating Datastore object and cursor")
         db = self.config['Main']['db']
-        try:
-            db_conn = sqlite3.connect(db)
-        except:
-            e = sys.exc_info()[1]
-            ec = sys.exc_info()[0]
-            log_msg = "Error during connect to database: %s %s"
-            logging.error(log_msg, e, ec)
-            return
-        else:
-            logging.debug("Datastore object and cursor are created")
-            # Now throw in Row factory so that we can use key/value based records
-            # fetchone, fetchall will return tuples that can be accessed on key.
-            db_conn.row_factory = sqlite3.Row
-            return db_conn, db_conn.cursor()
+        db_conn = sqlite3.connect(db)
+        logging.debug("Datastore object and cursor are created")
+        db_conn.row_factory = sqlite3.Row
+        return db_conn, db_conn.cursor()
 
     def close_connection(self):
         """
@@ -53,16 +42,8 @@ class DataStore:
         :return:
         """
         logging.debug("Close connection to database")
-        try:
-            self.dbConn.close()
-        except:
-            e = sys.exc_info()[1]
-            ec = sys.exc_info()[0]
-            log_msg = "Error during close connect to database: %s %s"
-            logging.error(log_msg, e, ec)
-            return
-        else:
-            return
+        self.dbConn.close()
+        return
 
     def create_tables(self):
         self.create_table_components()
@@ -72,16 +53,8 @@ class DataStore:
     def clear_tables(self):
         for table in self.tables:
             query = "DELETE FROM {table}".format(table=table)
-            try:
-                self.dbConn.execute(query)
-            except:
-                e = sys.exc_info()[1]
-                ec = sys.exc_info()[0]
-                log_msg = "Error during query execution: %s %s"
-                logging.error(log_msg, e, ec)
-                return False
-            else:
-                logging.info("Clear table {table}".format(table=table))
+            self.dbConn.execute(query)
+            logging.info("Clear table {table}".format(table=table))
 
     def remove_tables(self):
         for table in self.tables:
@@ -89,17 +62,9 @@ class DataStore:
 
     def remove_table(self, table):
         query = "DROP TABLE IF EXISTS {table}".format(table=table)
-        try:
-            self.dbConn.execute(query)
-        except:
-            e = sys.exc_info()[1]
-            ec = sys.exc_info()[0]
-            log_msg = "Error during query execution: %s %s"
-            logging.error(log_msg, e, ec)
-            return False
-        else:
-            logging.info("Drop table {table}".format(table=table))
-            return True
+        self.dbConn.execute(query)
+        logging.info("Drop table {table}".format(table=table))
+        return True
 
     def create_table_components(self):
         # Create table
@@ -122,14 +87,7 @@ class DataStore:
              url text,
              in_bereik text)
         """
-        try:
-            self.dbConn.execute(query)
-        except:
-            e = sys.exc_info()[1]
-            ec = sys.exc_info()[0]
-            log_msg = "Error during query execution - Attribute_action: %s %s"
-            logging.error(log_msg, e, ec)
-            return False
+        self.dbConn.execute(query)
         logging.info("Table components is build.")
         return True
 
@@ -142,30 +100,15 @@ class DataStore:
              source text,
              target text)
         """
-        try:
-            self.dbConn.execute(query)
-        except:
-            e = sys.exc_info()[1]
-            ec = sys.exc_info()[0]
-            log_msg = "Error during query execution - Attribute_action: %s %s"
-            logging.error(log_msg, e, ec)
-            return False
+        self.dbConn.execute(query)
         logging.info("Table relations is build.")
         return True
 
     def remove_table_user_data(self):
         query = 'DROP TABLE IF EXISTS user_data'
-        try:
-            self.dbConn.execute(query)
-        except:
-            e = sys.exc_info()[1]
-            ec = sys.exc_info()[0]
-            log_msg = "Error during query execution: %s %s"
-            logging.error(log_msg, e, ec)
-            return False
-        else:
-            logging.info("Drop table user_data")
-            return True
+        self.dbConn.execute(query)
+        logging.info("Drop table user_data")
+        return True
 
     def get_columns(self, tablename):
         """
@@ -181,22 +124,8 @@ class DataStore:
         values_template = ", ".join(["?"] * len(rowdict.keys()))
         query = "insert into  {tn} ({cols}) values ({vt})".format(tn=tablename, cols=columns, vt=values_template)
         values = tuple(rowdict[key] for key in rowdict.keys())
-        try:
-            self.dbConn.execute(query, values)
-        except:
-            e = sys.exc_info()[1]
-            ec = sys.exc_info()[0]
-            log_msg = "Error during query execution: %s %s"
-            logging.error(log_msg, e, ec)
-            return False
-        try:
-            self.dbConn.commit()
-        except:
-            e = sys.exc_info()[1]
-            ec = sys.exc_info()[0]
-            log_msg = "Error during query execution: %s %s"
-            logging.error(log_msg, e, ec)
-            return False
+        self.dbConn.execute(query, values)
+        self.dbConn.commit()
         return
 
     def go_down(self, item):
@@ -215,7 +144,6 @@ class DataStore:
                 WHERE target=?
                 AND rel_type not like '%gebeurtenis%'
                 AND NOT rel_type = 'in_procedurestap'
-                AND NOT rel_type = 'bij_procedurestap'
                 """
         # logging.debug("{q} - {i}".format(q=query, i=item))
         self.cur.execute(query, (item,))

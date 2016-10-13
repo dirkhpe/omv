@@ -3,8 +3,10 @@ This class consolidates functions related to the neo4J datastore.
 """
 
 import logging
+import sys
 from pandas import DataFrame
 from py2neo import Graph, Node, Relationship
+from py2neo.database import DBMS
 
 
 class NeoStore:
@@ -30,22 +32,24 @@ class NeoStore:
             'user': self.config['Graph']['username'],
             'password': self.config['Graph']['password'],
         }
-        try:
-            graph = Graph(**neo4j_config)
-        except:
-            logging.exception("Connect to Neo4J failed: ")
-            return
-        else:
-            return graph
+        # Connect to Graph
+        graph = Graph(**neo4j_config)
+        # Check that we are connected to the expected Neo4J Store - to avoid accidents...
+        dbname = DBMS().database_name
+        if dbname != self.config['Main']['neo_db']:
+            logging.fatal("Connected to Neo4J database {d}, but expected to be connected to {n}"
+                          .format(d=dbname, n=self.config['Main']['neo_db']))
+            sys.exit(1)
+        return graph
 
-    def denorm_table(self):
+    def denorm_table_3(self):
         """
-        Function to return denormalized table (Dossiertype, Procedure, Procedurestap)
-        @return: denormalized table
+        Function to return denormalized table (Dossiertype, ProcedureFase, Procedurestap)
+        @return: denormalized table with columns aanleg, procedure, procedurestap
         """
         query = """
-                MATCH (a:Dossiertype), (b:Procedure), (c:ProcedureStap)<-[r:bij_procedurestap]-(d:Document)
-                RETURN a.naam as Dossiertype,b.naam as Procedure, c.naam as ProcedureStap, d.naam as Document
+                match (a:Dossiertype)<-[:voor_dossiertype]-(b:ProcedureFase)<-[:in_procedure]-(c:ProcedureStap)
+                return b.naam as aanleg, a.naam as procedure, c.naam as procedurestap
                 """
         dnt = DataFrame(self.graph.run(query).data())
         return dnt
@@ -115,3 +119,24 @@ class NeoStore:
         query = "MATCH (n) WHERE  'Protege' IN labels(n) DETACH DELETE n"
         self.graph.run(query)
         return
+
+    def get_node(self, *labels, **kwargs):
+        """
+        This function will return a single node by label and optional properties.
+        @param labels:
+        @param kwargs:
+        @return:
+        """
+        return self.graph.find_one(*labels, **kwargs)
+
+    def get_start_nodes(self, end_node, rel_type):
+        """
+        This function will get all start nodes for relation rel_type and end node end_node
+        @param end_node:
+        @param rel_type:
+        @return: array of relations (start_node, rel_type, end_node)
+        """
+        rel_array = []
+        for rel in self.graph.match(rel_type=rel_type, end_node=end_node):
+            rel_array.append(rel)
+        return rel_array
