@@ -54,6 +54,19 @@ class NeoStore:
         dnt = DataFrame(self.graph.run(query).data())
         return dnt
 
+    def denorm_table_4(self):
+        """
+        Function to return denormalized table (Dossiertype, ProcedureFase, Procedurestap, Document)
+        @return: denormalized table with columns aanleg, procedure, procedurestap, document
+        """
+        query = """
+                match (a:Dossiertype)<-[:voor_dossiertype]-(b:ProcedureFase)<-[:in_procedure]-(c:ProcedureStap)
+                      <-[:bij_procedurestap]-(d:Document)
+                return b.naam as aanleg, a.naam as procedure, c.naam as procedurestap, d.naam as document
+                """
+        dnt = DataFrame(self.graph.run(query).data())
+        return dnt
+
     def create_node(self, *labels, **props):
         """
         Function to create node. The function will return the node object.
@@ -110,13 +123,14 @@ class NeoStore:
         dnt = DataFrame(self.graph.run(query).data())
         return dnt
 
-    def remove_prot(self):
+    def remove_nodes(self, label):
         """
-        This function will remove all nodes and relations that come from Protege.
+        This function will remove all nodes and relations for a specific label.
+        @param label: The label for which all nodes and relations will be removed.
         @return:
         """
-        logging.debug("Remove Nodes and Relations from Protege")
-        query = "MATCH (n) WHERE  'Protege' IN labels(n) DETACH DELETE n"
+        query = "MATCH (n) WHERE  '{l}' IN labels(n) DETACH DELETE n".format(l=label)
+        logging.info("Query: {q}".format(q=query))
         self.graph.run(query)
         return
 
@@ -128,6 +142,15 @@ class NeoStore:
         @return:
         """
         return self.graph.find_one(*labels, **kwargs)
+
+    def get_nodes(self, *labels, **kwargs):
+        """
+        This function will return all nodes by label and optional properties.
+        @param labels:
+        @param kwargs:
+        @return:
+        """
+        return self.graph.find(*labels, **kwargs)
 
     def get_start_nodes(self, end_node, rel_type):
         """

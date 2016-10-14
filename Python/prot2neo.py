@@ -16,7 +16,7 @@ if __name__ == "__main__":
     cfg = my_env.init_env("convert_protege", __file__)
     # Get NeoStore object
     ns = neostore.NeoStore(cfg)
-    ns.remove_prot()
+    ns.remove_nodes('Protege')
     # Get DataStore object
     ds = datastore.DataStore(cfg)
     # Get all Component rows
@@ -35,15 +35,26 @@ if __name__ == "__main__":
         node_info.info_loop()
     node_info.end_loop()
 
-    logging.debug("Been there, done that")
-    for k in node_obj.keys():
-        logging.debug("Key: {k}".format(k=k))
+    # First get all book nodes
+    toc = {}
+    dn = ns.get_nodes('Decreet')
+    for node in dn:
+        toc[node["toc"]] = node
+    un = ns.get_nodes('Uitvoeringsbesluit')
+    for node in un:
+        toc[node["toc"]] = node
 
     # Handle relations
+    rel2handle = ["voor_dossiertype", "in_procedure", "bij_procedurestap"]
+    rel2book = ["beschreven_in"]
     rows = ds.get_relations()
     rel_info = my_env.LoopInfo("Relations", 10)
     for row in rows:
-        ns.create_relation(node_obj[row["source"]], row["rel_type"], node_obj[row["target"]])
+        if row["rel_type"] in rel2handle:
+            ns.create_relation(node_obj[row["source"]], row["rel_type"], node_obj[row["target"]])
+        elif row["rel_type"] in rel2book:
+            # this_toc = ds.toc4item(row["target"])
+            ns.create_relation(node_obj[row["source"]], row["rel_type"], toc["3.10.1.1."])
         rel_info.info_loop()
     rel_info.end_loop()
     logging.info('End Application')
