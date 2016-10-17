@@ -106,6 +106,34 @@ class NeoStore:
         dnt = DataFrame(self.graph.run(query).data())
         return dnt
 
+    def get_reference(self, prot_id):
+        """
+        This function will get the references (artikels) for the different topics.
+        @param prot_id: Protege ID of the Procedure - document node for which references are searched.
+        @return: False - if no references, or formatted string of references.
+        """
+        query = """
+        match (a)-[:in_artikel]->(b:Artikel)-[:artikel_in_toc]->(c),
+        (a)-[:beschreven_in]->(c),
+        (b)-[:artikel_in_boek]->(d:Boek)
+        where a.protege_id = '{}'
+        return a.naam, b.artikel as artikel, c.toc as toc, c.item as item, d.item as boek
+        order by boek, artikel
+        """.format(prot_id)
+        refs = DataFrame(self.graph.run(query).data())
+        # No references for this item, return False
+        if refs.empty:
+            return False
+        # References defined, return them
+        refline = ""
+        for refrow in refs.iterrows():
+            boek = refrow[1]['boek']
+            item = refrow[1]['item']
+            toc = refrow[1]['toc']
+            artikel = refrow[1]['artikel']
+            refline = "{r}* {b} - {t} {i}, Artikel {a}\n".format(r=refline, b=boek, i=item, t=toc, a=artikel)
+        return refline
+
     def get_topics(self, left_id):
         """
         This function will get all relations between node with ID left and right for book with label blabel.

@@ -53,12 +53,13 @@ def init_loghandler(config, modulename):
     """
     logdir = config['Main']['logdir']
     loglevel = config['Main']['loglevel'].upper()
+    logname = config['Main']['logname']
     # Extract Computername
     computername = platform.node()
     # Define logfileName
     logfile = logdir + "/" + modulename + "_" + computername + ".log"
     # Configure the root logger
-    logger = logging.getLogger()
+    logger = logging.getLogger(logname)
     level = logging.getLevelName(loglevel)
     logger.setLevel(level)
     # Create Console Handler
@@ -79,7 +80,7 @@ def init_loghandler(config, modulename):
     # Add Formatter to Rotating File Handler
     rfh.setFormatter(formatter_file)
     # Add Handler to the logger
-    logger.addHandler(ch)
+    # logger.addHandler(ch)
     logger.addHandler(rfh)
     return logger
 

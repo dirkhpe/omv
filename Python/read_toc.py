@@ -58,7 +58,7 @@ if __name__ == "__main__":
         'item': args.sheet,
         'label': args.sheet
     }
-    node_label = 'book'
+    node_label = 'Boek'
     node = ns.create_node(node_label, args.sheet, **valuedict)
     node_obj[0] = node
     # I need to initialize toc_titel, because it is not sure I'll have a title.
@@ -103,7 +103,7 @@ if __name__ == "__main__":
             toc_hoofdstuk = "{t}{n}.".format(t=toc_titel, n=row.Nr.value)
             valuedict['toc'] = toc_hoofdstuk
         elif deel == 'Titel':
-            # Link to Book
+            # Link to Boek
             lnid = 0
             # Remember titel
             nid_titel = nid

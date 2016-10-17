@@ -35,7 +35,7 @@ if __name__ == "__main__":
         node_info.info_loop()
     node_info.end_loop()
 
-    # First get all book nodes
+    # First get all book toc nodes
     toc = {}
     dn = ns.get_nodes('Decreet')
     for node in dn:
@@ -43,6 +43,15 @@ if __name__ == "__main__":
     un = ns.get_nodes('Uitvoeringsbesluit')
     for node in un:
         toc[node["toc"]] = node
+    # Also get book nodes
+    book_nodes = {}
+    bn = ns.get_nodes('Boek')
+    for node in bn:
+        book_nodes[node["item"]] = node
+    # Initialize Artikel Nodes dictionary
+    art_nodes = {}
+    # Initialize Artikel in TOC nodes
+    art_in_toc = {}
 
     # Handle relations
     rel2handle = ["voor_dossiertype", "in_procedure", "bij_procedurestap"]
@@ -53,8 +62,33 @@ if __name__ == "__main__":
         if row["rel_type"] in rel2handle:
             ns.create_relation(node_obj[row["source"]], row["rel_type"], node_obj[row["target"]])
         elif row["rel_type"] in rel2book:
-            # this_toc = ds.toc4item(row["target"])
-            ns.create_relation(node_obj[row["source"]], row["rel_type"], toc["3.10.1.1."])
+            this_toc = ds.toc4item(row["target"])
+            try:
+                ns.create_relation(node_obj[row["source"]], row["rel_type"], toc[this_toc])
+            except KeyError:
+                logging.error("Try to relate proc {p} to item {i}, but toc {t} not found".format(p=row["source"],
+                                                                                                 i=row["target"],
+                                                                                                 t=this_toc))
+            # Check if we have Artikel nummer. If so, handle artikel nummer
+            if ds.art4item(row["target"]):
+                art, book = ds.art4item(row["target"])
+                art_id = "{b}_{a}".format(a=art, b=book)
+                try:
+                    art_node = art_nodes[art_id]
+                except KeyError:
+                    # Create artikel-book node
+                    node_label = "Artikel"
+                    valuedict = {
+                        'artikel': art
+                    }
+                    art_node = ns.create_node(node_label, **valuedict)
+                    art_nodes[art_id] = art_node
+                    # Link artikel to boek
+                    ns.create_relation(art_node, 'artikel_in_boek', book_nodes[book])
+                # Artikel Node - Boek relation exist, now add relation Artikel to Item
+                ns.create_relation(node_obj[row["source"]], 'in_artikel', art_node)
+                # Also check for Artikel to TOC link. create_relation will add the artikel to TOC only once.
+                ns.create_relation(art_node, 'artikel_in_toc', toc[this_toc])
         rel_info.info_loop()
     rel_info.end_loop()
     logging.info('End Application')

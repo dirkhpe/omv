@@ -21,7 +21,7 @@ if __name__ == "__main__":
     items = []
     cfg = my_env.init_env("convert_protege", __file__)
     logging.info("Arguments: {a}".format(a=args))
-    outfile = os.path.join(cfg['Main']['logdir'], "{n}.txt".format(n=args.type))
+    outfile = os.path.join(cfg['Main']['reportdir'], "{n}.txt".format(n=args.type))
     ns = neostore.NeoStore(cfg)
     dosstype_name = args.type
     # Get Node for DossierType
@@ -33,22 +33,30 @@ if __name__ == "__main__":
         fh.write("h1. {n}\n".format(n=dosstype_node["naam"]))
         if dosstype_node["commentaar"]:
             fh.write("*Commentaar:* {c}\n".format(c=dosstype_node["commentaar"]))
+        if ns.get_reference(dosstype_node["protege_id"]):
+            fh.write("{}".format(ns.get_reference(dosstype_node["protege_id"])))
         # Get ProcedureFase for Dossiertype
         fase_array = ns.get_start_nodes(dosstype_node, 'voor_dossiertype')
         for fase in fase_array:
             fh.write("h2. {n}\n".format(n=fase.start_node()["naam"]))
             if fase.start_node()["commentaar"]:
                 fh.write("*Commentaar:* {c}\n".format(c=fase.start_node()["commentaar"]))
+            if ns.get_reference(fase.start_node()["protege_id"]):
+                fh.write("{}".format(ns.get_reference(fase.start_node()["protege_id"])))
             # Get ProcedureStap for ProcedureFase
             stap_array = ns.get_start_nodes(fase.start_node(), 'in_procedure')
             for stap in stap_array:
                 fh.write("h3. {n}\n".format(n=stap.start_node()["naam"]))
                 if stap.start_node()["commentaar"]:
                     fh.write("*Commentaar:* {c}\n".format(c=stap.start_node()["commentaar"]))
+                if ns.get_reference(stap.start_node()["protege_id"]):
+                    fh.write("{}".format(ns.get_reference(stap.start_node()["protege_id"])))
                 # Get documenten for Procedure Stap
                 doc_array = ns.get_start_nodes(stap.start_node(), 'bij_procedurestap')
                 for doc in doc_array:
                     fh.write("{{color:blue}}{n}{{color}}\n".format(n=doc.start_node()["naam"]))
                     if doc.start_node()["commentaar"]:
                         fh.write("{{color:blue}}Commentaar:{{color}} {c}\n".format(c=doc.start_node()["commentaar"]))
+                    if ns.get_reference(doc.start_node()["protege_id"]):
+                        fh.write("{}".format(ns.get_reference(doc.start_node()["protege_id"])))
     logging.info('End Application')

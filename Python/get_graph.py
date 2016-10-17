@@ -24,7 +24,7 @@ def get_edge_app(rel_type):
     elif rel_type == "bij_procedurestap":
         edge_appearance = {'color': "#DC3800"}
     else:
-        logging.error("Relation Type {rt} not defined.".format(rt=rel_type))
+        logger.error("Relation Type {rt} not defined.".format(rt=rel_type))
         edge_appearance = {'color': "#000000"}
     return edge_appearance
 
@@ -52,7 +52,7 @@ def get_node_app(node_class):
                            'shape': "egg",
                            'style': "filled"}
     else:
-        logging.error("Node Class {nc} not defined.".format(nc=node_class))
+        logger.error("Node Class {nc} not defined.".format(nc=node_class))
         node_appearance = {'fillcolor': "#DC3800",
                            'shape': "egg",
                            'style': "filled"}
@@ -100,13 +100,14 @@ def go_up(item):
 if __name__ == "__main__":
     items = []
     cfg = my_env.init_env("convert_protege", __file__)
+    logger = logging.getLogger(cfg['Main']['logname'])
     ds = datastore.DataStore(cfg)
     # center = "struct_Class30035"
     center = sys.argv[1]
     # Get Node attributes
     center_rec = ds.get_comp_attribs(center)
     if center_rec is None:
-        logging.error("No component record found for {c}.".format(c=center))
+        logger.error("No component record found for {c}.".format(c=center))
     else:
         items.append(center)
         dot = Digraph(comment="Overzicht voor {n}".format(n=center_rec["naam"]))
@@ -122,4 +123,4 @@ if __name__ == "__main__":
         dot.render(graphfile, view=True)
         dot.save("{}.dot".format(center), cfg["Main"]["graphdir"])
 
-    logging.info('End Application')
+    logger.info('End Application')

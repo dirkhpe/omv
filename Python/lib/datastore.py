@@ -4,6 +4,7 @@ This class consolidates functions related to the local mysql datastore.
 
 import logging
 import sqlite3
+import sys
 
 
 class DataStore:
@@ -203,6 +204,18 @@ class DataStore:
         rows = self.cur.fetchall()
         return rows
 
+    def get_target(self, source, rel_type):
+        """
+        This method will use a source id and rel_type to find target_ids.
+        @param source: Protege ID of the Source element
+        @param rel_type: Name of the relation.
+        @return: Array of targets. Each record is a dictionary of the array.
+        """
+        query = "SELECT target FROM relations WHERE source=? AND rel_type=?"
+        self.cur.execute(query, (source, rel_type))
+        rows = self.cur.fetchall()
+        return rows
+
     def get_components_type(self, comp_type='Dossiertype'):
         """
         This method will return all components of a specific type (class).
@@ -213,3 +226,67 @@ class DataStore:
         self.cur.execute(query, (comp_type,))
         rows = self.cur.fetchall()
         return [dt['protege_id'] for dt in rows]
+
+    @staticmethod
+    def item_class(item, iclass):
+        """
+        This function will get an item row and check the class. Item row can be none (not found) or from another class.
+        @param item:
+        @param iclass:
+        @return: True if item is from the specified class, False otherwise.
+        """
+        if not item:
+            logging.error("No Component Row for item")
+            return False
+        elif item['class'] != iclass:
+            logging.fatal("Expected class {e} for {i}, but class is {c}".format(i=item['protege_id'],
+                                                                                c=item['class'],
+                                                                                e=iclass))
+            return False
+        else:
+            return True
+
+    def toc4item(self, item):
+        """
+        This function gets a Regelgeving_Item and will calculate the TOC for it.
+        @param item: Protege ID of the item.
+        @return:
+        """
+        # Get attributes for the item
+        rec = self.get_comp_attribs(item)
+        # Check attribute class. This needs to be Regelgeving_Item
+        if not self.item_class(rec, 'Regelgeving_Item'):
+            sys.exit(1)
+        # OK, this is regelgeving_item. Now create toc.
+        if rec['titel_item']:
+            toc = "{}.".format(rec['titel_item'])
+        else:
+            toc = "."
+        if rec['hoofdstuk']:
+            toc = "{t}{n}.".format(t=toc, n=rec['hoofdstuk'])
+        if rec['afdeling']:
+            toc = "{t}{n}.".format(t=toc, n=rec['afdeling'])
+        if rec['onderafdeling']:
+            toc = "{t}{n}.".format(t=toc, n=rec['onderafdeling'])
+        return toc
+
+    def art4item(self, item):
+        """
+        This function gets a Regelgeving_Item and will calculate Artikel and Boek for it.
+        @param item: Protege_ID of the item.
+        @return: Artikel nr and Protege_ID van Boek, or False if no artikel found.
+        """
+        # Get attributes for the item
+        rec = self.get_comp_attribs(item)
+        if not self.item_class(rec, 'Regelgeving_Item'):
+            sys.exit(1)
+        # OK, this is Regelgeving_Item, Now find artikel
+        if rec['artikel']:
+            book_array = self.get_target(item, 'item_bij_bron')
+            # There should be one row only.
+            book = book_array[0]
+            # Get attributes for the book. The 'naam' is used as book identifier. This must be the same as in Protege.
+            book_attr = self.get_comp_attribs(book['target'])
+            return rec['artikel'], book_attr['naam']
+        else:
+            return False
