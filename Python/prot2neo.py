@@ -11,7 +11,7 @@ from lib import neostore
 if __name__ == "__main__":
     # Initialize Environment
     key_list = ["naam", "protege_id", "commentaar", "in_bereik", "afdeling", "artikel", "bladzijde", "hoofdstuk",
-                "onderafdeling", "titel", "titel_item", "url"]
+                "onderafdeling", "titel", "titel_item", "url", "label"]
     source = 'Protege'
     cfg = my_env.init_env("convert_protege", __file__)
     # Get NeoStore object

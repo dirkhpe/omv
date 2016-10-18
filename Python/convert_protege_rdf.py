@@ -112,6 +112,7 @@ def handle_instances(cfg):
                     rowdict[strip_rdf(rdf_value, child.tag)] = child.text
         # Check to remove identifier from naam:
         try:
+            rowdict['label'] = rowdict['naam']
             rowdict['naam'] = strip_name_id(rowdict["naam"])
         except KeyError:
             pass

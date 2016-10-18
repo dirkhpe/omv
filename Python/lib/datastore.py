@@ -77,6 +77,7 @@ class DataStore:
              naam text,
              class text,
              protege_id text unique,
+             label text,
              commentaar text,
              afdeling text,
              artikel text,
