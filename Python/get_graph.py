@@ -48,7 +48,7 @@ def get_node_app(node_class):
                            'shape': "box",
                            'style': "filled"}
     elif node_class == "Dossiertype":
-        node_appearance = {'fillcolor': "#DC3800",
+        node_appearance = {'fillcolor': "#00FFFF",
                            'shape': "egg",
                            'style': "filled"}
     else:
@@ -119,8 +119,8 @@ if __name__ == "__main__":
         dot.node(center, center_rec["naam"], **node_app)
         # go_up(center)
         go_down(center)
-        graphfile = os.path.join(cfg["Main"]["graphdir"], center)
+        graphfile = os.path.join(cfg["Main"]["graphdir"], center_rec["naam"])
         dot.render(graphfile, view=True)
-        dot.save("{}.dot".format(center), cfg["Main"]["graphdir"])
+        dot.save("{}.dot".format(center_rec["naam"]), cfg["Main"]["graphdir"])
 
     logger.info('End Application')

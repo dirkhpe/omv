@@ -132,6 +132,9 @@ class NeoStore:
             toc = refrow[1]['toc']
             artikel = refrow[1]['artikel']
             refline = "{r}* {b} - {t} {i}, Artikel {a}\n".format(r=refline, b=boek, i=item, t=toc, a=artikel)
+        if len(refline) > 5:
+            # Add another CRLF
+            refline = "{}\n".format(refline)
         return refline
 
     def get_topics(self, left_id):
@@ -161,6 +164,24 @@ class NeoStore:
         logging.info("Query: {q}".format(q=query))
         self.graph.run(query)
         return
+
+    def get_relations_togroup(self, from_label, to_label, rel_type, to_nodes):
+        """
+        This function will return the naam and the protege_id for all nodes from label from_label to label to_label
+        if the target (to) nodes are in the group to_nodes. The relation type is rel_type.
+        @param from_label: Label for the FROM node
+        @param to_label: Label for the TO node
+        @param rel_type: Relation Type
+        @param to_nodes: List of ending nodes that are in scope.
+        @return: from_name, from_id, to_name, to_id
+        """
+        query = """
+                match (f:{from_label})-[:{rel_type}]->(t:{to_label})
+                where t.protege_id in {to_nodes}
+                return f.naam as f_naam, f.protege_id as f_id,
+                t.naam as t_naam, t.protege_id as t_id
+                """.format(from_label=from_label, to_label=to_label, rel_type=rel_type, to_nodes=to_nodes)
+        return DataFrame(self.graph.run(query).data())
 
     def get_node(self, *labels, **kwargs):
         """
