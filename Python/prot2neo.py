@@ -16,7 +16,10 @@ if __name__ == "__main__":
     cfg = my_env.init_env("convert_protege", __file__)
     # Get NeoStore object
     ns = neostore.NeoStore(cfg)
+    # Remove all Dossiertype > Document nodes from Protege
     ns.remove_nodes('Protege')
+    # Also remove all Artikels
+    ns.remove_nodes('Artikel')
     # Get DataStore object
     ds = datastore.DataStore(cfg)
     # Get all Component rows

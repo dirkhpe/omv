@@ -42,6 +42,18 @@ class NeoStore:
             sys.exit(1)
         return graph
 
+    def calc_nodes(self, label):
+        """
+        This function will calculate the number of nodes for the label specified
+        @param label: Calculate number of nodes for this label
+        @return: Number of nodes
+        """
+        query = "MATCH (n:{label}) RETURN count(n) as cnt".format(label=label)
+        df = DataFrame(self.graph.run(query).data())
+        cnt_arr = next(df.iterrows())[1]
+        cnt = cnt_arr['cnt']
+        return cnt
+
     def denorm_table_3(self):
         """
         Function to return denormalized table (Dossiertype, ProcedureFase, Procedurestap)
