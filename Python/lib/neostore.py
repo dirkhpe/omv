@@ -195,6 +195,36 @@ class NeoStore:
                 """.format(from_label=from_label, to_label=to_label, rel_type=rel_type, to_nodes=to_nodes)
         return DataFrame(self.graph.run(query).data())
 
+    def get_nodes_from_orphan(self, from_label, rel_type):
+        """
+        This function will return the naam and the label for all nodes for which a mandatory FROM relation is
+        missing.
+        @param from_label: Label for the FROM node
+        @param rel_type: Relation Type
+        @return: Pandas Dataframe with from_name, from_label
+        """
+        query = """
+                match (f:{from_label})
+                where not (f)-[:{rel_type}]->()
+                return f.naam as naam, f.label as label
+                """.format(from_label=from_label, rel_type=rel_type)
+        return DataFrame(self.graph.run(query).data())
+
+    def get_nodes_to_orphan(self, to_label, rel_type):
+        """
+        This function will return the naam and the label for all nodes for which a mandatory TO relation is
+        missing.
+        @param to_label: Label for the TO node
+        @param rel_type: Relation Type
+        @return: Pandas Dataframe with to_name, to_label
+        """
+        query = """
+                match (t:{to_label})
+                where not (t)<-[:{rel_type}]-()
+                return t.naam as naam, t.label as label
+                """.format(to_label=to_label, rel_type=rel_type)
+        return DataFrame(self.graph.run(query).data())
+
     def get_node(self, *labels, **kwargs):
         """
         This function will return a single node by label and optional properties.

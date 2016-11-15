@@ -105,7 +105,9 @@ def get_inifile(projectname, scriptname):
         configfile = os.path.join(filepath, 'properties', "{p}.ini".format(p=projectname))
     ini_config = configparser.ConfigParser()
     try:
-        ini_config.read_file(open(configfile))
+        f = open(configfile)
+        ini_config.read_file(f)
+        f.close()
     except:
         e = sys.exc_info()[1]
         ec = sys.exc_info()[0]

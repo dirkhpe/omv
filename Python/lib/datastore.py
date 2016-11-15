@@ -190,7 +190,7 @@ class DataStore:
         This method will return all components with all attributes from the components table 'in_bereik'.
         @return: Array of components. Each component is a dictionary of the array.
         """
-        query = "SELECT * FROM components WHERE NOT class like 'Regelgeving%'"
+        query = "SELECT * FROM components WHERE NOT class like 'Regelgeving%' AND in_bereik = 'true'"
         self.cur.execute(query)
         rows = self.cur.fetchall()
         return rows
