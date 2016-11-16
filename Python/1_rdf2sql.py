@@ -1,5 +1,5 @@
 """
-This script will read a RDF file created by Protege and extract information.
+This script will read a RDF file created by Protege and extract information for import in SQL table.
 
 The script will work on the extract of the instances. The classes are not yet processed.
 

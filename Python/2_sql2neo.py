@@ -16,10 +16,11 @@ if __name__ == "__main__":
     cfg = my_env.init_env("convert_protege", __file__)
     # Get NeoStore object
     ns = neostore.NeoStore(cfg)
-    # Remove all Dossiertype > Document nodes from Protege
-    ns.remove_nodes('Protege')
-    # Also remove all Artikels
-    ns.remove_nodes('Artikel')
+    # Clean Neo4J for node labels that will be restored
+    labels = ['Protege', 'Artikel', 'Aanleg']
+    for label in labels:
+        logging.info('Remove nodes with label {l}'.format(l=label))
+        ns.remove_nodes(label)
     # Get DataStore object
     ds = datastore.DataStore(cfg)
     # Get all Component rows

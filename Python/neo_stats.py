@@ -27,7 +27,9 @@ class TestNeoStore(unittest.TestCase):
                 'Titel': 10,
                 'Hoofdstuk': 46,
                 'Afdeling': 99,
-                'Onderafdeling': 49}
+                'Onderafdeling': 49,
+                'Aanleg': 3
+        }
         for k, v in nodes.items():
             self.assertEqual(self.ns.calc_nodes(k), v, "{k}".format(k=k))
 

@@ -79,6 +79,35 @@ class NeoStore:
         dnt = DataFrame(self.graph.run(query).data())
         return dnt
 
+    def denorm_aanleg_3(self):
+        """
+        Function to return denormalized table (Dossiertype, Aanleg, Procedurestap)
+        Note that you need a distinct in the return class. This is not required in case a.naam and c.naam are
+        replaced with a.label and c.label.
+        Do not use - see comment in 3_neo_add_aanleg.py
+        @return: denormalized table with columns aanleg, procedure, procedurestap
+        """
+        query = """
+                match (a:Dossiertype)<-[:aanleg_bij_type]-(b:Aanleg)<-[:in_aanleg]-(c:ProcedureStap)
+                return distinct b.naam as aanleg, a.naam as procedure, c.naam as procedurestap
+                """
+        dnt = DataFrame(self.graph.run(query).data())
+        return dnt
+
+    def denorm_aanleg_4(self):
+        """
+        Function to return denormalized table (Dossiertype, Aanleg, Procedurestap, Document)
+        Do not use - see comment in 3_neo_add_aanleg.py
+        @return: denormalized table with columns aanleg, procedure, procedurestap, document
+        """
+        query = """
+                match (a:Dossiertype)<-[:aanleg_bij_type]-(b:Aanleg)<-[:in_aanleg]-(c:ProcedureStap)
+                      <-[:bij_procedurestap]-(d:Document)
+                return distinct b.naam as aanleg, a.naam as procedure, c.naam as procedurestap, d.naam as document
+                """
+        dnt = DataFrame(self.graph.run(query).data())
+        return dnt
+
     def create_node(self, *labels, **props):
         """
         Function to create node. The function will return the node object.
@@ -93,9 +122,9 @@ class NeoStore:
     def create_relation(self, left_node, rel, right_node):
         """
         Function to create relationship between nodes.
-        @param left_node:
+        @param left_node: FROM node
         @param rel:
-        @param right_node:
+        @param right_node: TO node
         @return:
         """
         rel = Relationship(left_node, rel, right_node)
@@ -117,6 +146,53 @@ class NeoStore:
                 """.format(l=left, bl=blabel)
         dnt = DataFrame(self.graph.run(query).data())
         return dnt
+
+    def get_aanleg4type(self, dossiertype_id):
+        """
+        This function will get the graph for the dossiertype - aanleg - procedurestap, but avoiding Cartesian Product.
+        @param dossiertype_id: Protege ID for Dossiertype
+        @return: Dictionary of Nodes with Aanleg. The nodes are the keys of the dictionary. Values are 1.
+        """
+        query = """
+        MATCH (d:Dossiertype)<-[:voor_dossiertype]-(f:ProcedureFase)-[:aanleg]->(a:Aanleg)
+        WHERE d.protege_id = '{id}'
+        RETURN a
+        ORDER BY a.naam
+        """.format(id=dossiertype_id)
+        res = self.graph.run(query)
+        # Be careful, Cursor will return duplicate nodes!
+        # Get the list of unique nodes
+        node_list = {}
+        while res.forward():
+            current = res.current()
+            (node, ) = current.values()
+            node_list[node] = 1
+        return node_list
+
+    def get_stap(self, dossiertype_id, aanleg):
+        """
+        This function will get the graph for the dossiertype - aanleg - procedurestap, but avoiding Cartesian Product.
+        @param dossiertype_id: Protege ID for Dossiertype
+        @param aanleg: Naam of the Aanleg
+        @return: Dictionary of Nodes with Aanleg. The nodes are the keys of the dictionary. Values are 1.
+        """
+        query = """
+        MATCH (d:Dossiertype)<-[:voor_dossiertype]-(f:ProcedureFase)<-[:in_procedure]-(s:ProcedureStap),
+              (f)-[:aanleg]->(a:Aanleg)
+        WHERE d.protege_id = '{id}'
+          AND a.naam = '{a}'
+        RETURN s
+        ORDER BY s.naam
+        """.format(id=dossiertype_id, a=aanleg)
+        res = self.graph.run(query)
+        # Be careful, Cursor will return duplicate nodes!
+        # Get the list of unique nodes
+        node_list = {}
+        while res.forward():
+            current = res.current()
+            (node, ) = current.values()
+            node_list[node] = 1
+        return node_list
 
     def get_reference(self, prot_id):
         """
@@ -176,6 +252,39 @@ class NeoStore:
         logging.info("Query: {q}".format(q=query))
         self.graph.run(query)
         return
+
+    def get_aanleg_paths(self, aanleg):
+        """
+        This function gets aanleg string (Eerste Aanleg, Laatste Aanleg) and finds all paths Dossiertype -
+        ProcedureFase - ProcedureStap for this aanleg.
+        The function will return the Dossiertype nodes and the ProcedureStap nodes.
+        @param aanleg:
+        @return: Cursor with Node Dossiertype, ProcedureFase and ProcedureStap
+        """
+        query = """
+        MATCH (d:Dossiertype)<-[:voor_dossiertype]-(f:ProcedureFase),
+              (f)<-[:in_procedure]-(s:ProcedureStap)
+        WHERE f.naam contains '{aanleg}'
+        RETURN d,f,s
+        """.format(aanleg=aanleg)
+        res = self.graph.run(query)
+        return res
+
+    def get_no_aanleg_paths(self):
+        """
+        This function finds all paths Dossiertype - ProcedureFase - ProcedureStap for which naam ProcedureFase does
+        not contain 'Aanleg'.
+        The function will return the Nodes Dossiertype, ProcedureFase and ProcedureStap.
+        @return: Cursor with Nodes Dossiertype, ProcedureFase and ProcedureStap
+        """
+        query = """
+        MATCH (d:Dossiertype)<-[:voor_dossiertype]-(f:ProcedureFase),
+              (f)<-[:in_procedure]-(s:ProcedureStap)
+        WHERE not (f.naam contains 'Aanleg')
+        RETURN d,f,s
+        """
+        res = self.graph.run(query)
+        return res
 
     def get_relations_togroup(self, from_label, to_label, rel_type, to_nodes):
         """
