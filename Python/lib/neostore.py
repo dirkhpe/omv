@@ -5,7 +5,7 @@ This class consolidates functions related to the neo4J datastore.
 import logging
 import sys
 from pandas import DataFrame
-from py2neo import Graph, Node, Relationship
+from py2neo import Graph, Node, Relationship, NodeSelector
 from py2neo.database import DBMS
 
 
@@ -20,6 +20,7 @@ class NeoStore:
         logging.debug("Initializing Neostore object")
         self.config = config
         self.graph = self._connect2db()
+        self.selector = NodeSelector(self.graph)
         return
 
     def _connect2db(self):
@@ -84,7 +85,7 @@ class NeoStore:
         Function to return denormalized table (Dossiertype, Aanleg, Procedurestap)
         Note that you need a distinct in the return class. This is not required in case a.naam and c.naam are
         replaced with a.label and c.label.
-        Do not use - see comment in 3_neo_add_aanleg.py
+        Do not use - see comment in 4_neo_add_aanleg.py
         @return: denormalized table with columns aanleg, procedure, procedurestap
         """
         query = """
@@ -97,7 +98,7 @@ class NeoStore:
     def denorm_aanleg_4(self):
         """
         Function to return denormalized table (Dossiertype, Aanleg, Procedurestap, Document)
-        Do not use - see comment in 3_neo_add_aanleg.py
+        Do not use - see comment in 4_neo_add_aanleg.py
         @return: denormalized table with columns aanleg, procedure, procedurestap, document
         """
         query = """
@@ -146,6 +147,19 @@ class NeoStore:
                 """.format(l=left, bl=blabel)
         dnt = DataFrame(self.graph.run(query).data())
         return dnt
+
+    def get_commentaar(self):
+        """
+        This function will collect the Commentaar and return it in a dictionary list.
+        @return:
+        """
+        query = """
+            MATCH (n)
+            WHERE n.commentaar CONTAINS "???"
+            RETURN labels(n) AS labels, n.naam AS naam, n.label AS label, n.commentaar AS commentaar
+        """
+        res = self.graph.run(query)
+        return res.data()
 
     def get_aanleg4type(self, dossiertype_id):
         """
@@ -355,11 +369,32 @@ class NeoStore:
     def get_start_nodes(self, end_node, rel_type):
         """
         This function will get all start nodes for relation rel_type and end node end_node
-        @param end_node:
-        @param rel_type:
+        @param end_node: End node of the relation
+        @param rel_type:Start node of the relation
         @return: array of relations (start_node, rel_type, end_node)
         """
         rel_array = []
         for rel in self.graph.match(rel_type=rel_type, end_node=end_node):
             rel_array.append(rel)
         return rel_array
+
+    def del_relation(self, from_node, rel_type, to_node):
+        """
+        This function will remove the relation between from_node and to_node
+        @param from_node: the from_node
+        @param rel_type: Relation type to remove
+        @param to_node: the to_node in the relation
+        @return:
+        """
+        nid = "protege_id"
+        from_node_id = from_node[nid]
+        to_node_id = to_node[nid]
+        query = """
+                MATCH (f)-[r:{rel}]->(t)
+                WHERE f.{nid} = '{f_nid}'
+                  AND t.{nid} = '{t_nid}'
+                DELETE r
+                """.format(rel=rel_type, nid=nid, f_nid=from_node_id, t_nid=to_node_id)
+        logging.info("Query to remove relation: \n{query}".format(query=query))
+        self.graph.run(query)
+        return

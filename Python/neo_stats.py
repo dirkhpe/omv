@@ -20,15 +20,15 @@ class TestNeoStore(unittest.TestCase):
         nodes = {
                 'Dossiertype': 14,
                 'ProcedureFase': 20,
-                'ProcedureStap': 32,
-                'Document': 212,
+                'ProcedureStap': 33,
+                'Document': 210,
                 'Artikel': 79,
                 'Boek': 2,
                 'Titel': 10,
                 'Hoofdstuk': 46,
                 'Afdeling': 99,
                 'Onderafdeling': 49,
-                'Aanleg': 3
+                'Aanleg': 2
         }
         for k, v in nodes.items():
             self.assertEqual(self.ns.calc_nodes(k), v, "{k}".format(k=k))

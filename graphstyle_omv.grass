@@ -36,6 +36,7 @@ node.Document {
   border-color: #EDBA39;
   text-color-internal: #604A0E;
   caption: '{naam}';
+  diameter: 80px;
 }
 
 node.ProcedureStap {
@@ -43,6 +44,7 @@ node.ProcedureStap {
   border-color: #BF85D6;
   text-color-internal: #FFFFFF;
   caption: '{naam}';
+  diameter: 80px;
 }
 
 node.ProcedureFase {
@@ -50,6 +52,7 @@ node.ProcedureFase {
   border-color: #60B58B;
   text-color-internal: #FFFFFF;
   caption: '{naam}';
+  diameter: 80px;
 }
 
 node.Gebeurtenis {
@@ -63,6 +66,28 @@ node.Dossiertype {
   color: #68BDF6;
   border-color: #5CA8DB;
   text-color-internal: #FFFFFF;
+  caption: '{naam}';
+  diameter: 80px;
+}
+
+node.Artikel {
+  color: #A5ABB6;
+  border-color: #9AA1AC;
+  text-color-internal: #FFFFFF;
+  caption: '{artikel}';
+}
+
+node.Eerste Aanleg {
+  color: #A5ABB6;
+  border-color: #9AA1AC;
+  text-color-internal: #FFFFFF;
+  caption: '{label}';
+}
+
+node.Aanleg {
+  color: #FFD86E;
+  border-color: #EDBA39;
+  text-color-internal: #604A0E;
   caption: '{naam}';
 }
 

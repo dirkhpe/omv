@@ -20,8 +20,12 @@ if __name__ == "__main__":
     script = os.path.join(filepath, '2_sql2neo.py')
     logging.info("Import SQLite tables into Neo4J")
     res = subprocess.call([python_path, script], env=os.environ.copy())
+    # Duplicate "Openbaar Onderzoek" for "Bijstelling Voorwerp Duur Omgevingsvergunning"
+    script = os.path.join(filepath, '3_voorwerpduur_oo.py')
+    logging.info("Duplicate Openbaar Onderzoek for Bijstelling Voorwerp/Duur Omgevingsvergunning")
+    res = subprocess.call([python_path, script], env=os.environ.copy())
     # Add Aanleg Nodes into Neo4J
-    script = os.path.join(filepath, '3_neo_add_aanleg.py')
+    script = os.path.join(filepath, '4_neo_add_aanleg.py')
     logging.info("Add Aanleg Nodes into Neo4J")
     res = subprocess.call([python_path, script], env=os.environ.copy())
     # Test Neo4J content

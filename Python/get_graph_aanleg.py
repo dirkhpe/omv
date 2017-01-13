@@ -68,6 +68,7 @@ if __name__ == "__main__":
                              'Default is "Aanvraag Omgevingsvergunning".')
     args = parser.parse_args()
     items = []
+    relations = []
     cfg = my_env.init_env("convert_protege", __file__)
     logging.info("Arguments: {a}".format(a=args))
     outfile = os.path.join(cfg['Main']['reportdir'], "{n}.txt".format(n=args.type))
@@ -97,8 +98,11 @@ if __name__ == "__main__":
             node_app = get_node_app('Aanleg')
             dot.node(aanleg_node['naam'], aanleg_node['naam'], **node_app)
         # Add Relation from Dossiertype to Aanleg
-        eapp = get_edge_app('aanleg')
-        dot.edge(dosstype_id, aanleg_node['naam'], label='aanleg', **eapp)
+        rel_name = "{f}->{t}".format(f=dosstype_id, t=aanleg_node["naam"])
+        if rel_name not in relations:
+            relations.append(rel_name)
+            eapp = get_edge_app('aanleg')
+            dot.edge(dosstype_id, aanleg_node['naam'], label='aanleg', **eapp)
         # Get ProcedureStap for Aanleg
         stap_nodes = ns.get_stap(dosstype_id, aanleg_node['naam'])
         for stap in stap_nodes:
@@ -108,8 +112,11 @@ if __name__ == "__main__":
                 node_app = get_node_app('ProcedureStap')
                 dot.node(stap['protege_id'], stap['naam'], **node_app)
             # Add Relation from Dossiertype to Aanleg
-            eapp = get_edge_app('stap')
-            dot.edge(aanleg_node['naam'], stap['protege_id'], label='stap', **eapp)
+            rel_name = "{f}->{t}".format(f=aanleg_node["naam"], t=stap['protege_id'])
+            if rel_name not in relations:
+                relations.append(rel_name)
+                eapp = get_edge_app('stap')
+                dot.edge(aanleg_node['naam'], stap['protege_id'], label='stap', **eapp)
             # Get documenten for Procedure Stap
             doc_array = ns.get_start_nodes(stap, 'bij_procedurestap')
             for doc in doc_array:
@@ -119,8 +126,11 @@ if __name__ == "__main__":
                     node_app = get_node_app('Document')
                     dot.node(doc.start_node()["protege_id"], doc.start_node()["naam"], **node_app)
                 # Add Relation from Dossiertype to Aanleg
-                eapp = get_edge_app('document')
-                dot.edge(stap['protege_id'], doc.start_node()["protege_id"], label='document', **eapp)
+                rel_name = "{f}->{t}".format(f=stap['protege_id'], t=doc.start_node()["protege_id"])
+                if rel_name not in relations:
+                    relations.append(rel_name)
+                    eapp = get_edge_app('document')
+                    dot.edge(stap['protege_id'], doc.start_node()["protege_id"], label='document', **eapp)
     graphfile = os.path.join(cfg["Main"]["graphdir"], dosstype_name)
     dot.render(graphfile, view=True)
     dot.save("{}.dot".format(dosstype_name), cfg["Main"]["graphdir"])
