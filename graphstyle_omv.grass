@@ -77,7 +77,7 @@ node.Artikel {
   caption: '{artikel}';
 }
 
-node.Eerste Aanleg {
+node.EersteAanleg {
   color: #A5ABB6;
   border-color: #9AA1AC;
   text-color-internal: #FFFFFF;
@@ -89,5 +89,13 @@ node.Aanleg {
   border-color: #EDBA39;
   text-color-internal: #604A0E;
   caption: '{naam}';
+}
+
+node.Postgres {
+  color: #68BDF6;
+  border-color: #5CA8DB;
+  text-color-internal: #FFFFFF;
+  caption: '{name}';
+  diameter: 65px;
 }
 

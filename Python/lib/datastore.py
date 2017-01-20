@@ -291,3 +291,14 @@ class DataStore:
             return rec['artikel'], book_attr['naam']
         else:
             return False
+
+    def get_pg_tables(self):
+        """
+        This function will collect and return Foreign Table - Parent Table relations from Postgres.
+        The information is in sqlite3 database, table 'postgres' with columns FK_Table and PK_Table.
+        @return: List of dictionaries with the records. There are no duplicates.
+        """
+        query = "SELECT distinct * FROM postgres"
+        self.cur.execute(query)
+        rows = self.cur.fetchall()
+        return rows
