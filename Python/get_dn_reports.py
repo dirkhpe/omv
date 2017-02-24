@@ -12,17 +12,18 @@ if __name__ == "__main__":
     ns = neostore.NeoStore(cfg)
     # First get denormalized table for aanleg - procedure - stap
     dnt = ns.denorm_table_3()
-    fn = os.path.join(cfg['Main']['reportdir'], "dn3.csv")
+    fn = os.path.join(cfg['Main']['reportdir'], "neo4j_dn3.csv")
     with open(fn, 'w') as fh:
         fh.write("aanleg;procedure;procedurestap\n")
         for row in dnt.iterrows():
-            aanleg = my_env.aanleg(row[1]['aanleg'])
+            # aanleg = my_env.aanleg(row[1]['aanleg'])
+            aanleg = row[1]['aanleg']
             procedure = row[1]['procedure']
             stap = row[1]['procedurestap']
             fh.write("{a};{p};{s}\n".format(a=aanleg, p=procedure, s=stap))
     # Then get denormalized report for aanleg - procedure - stap - document
     dnt = ns.denorm_table_4()
-    fn = os.path.join(cfg['Main']['reportdir'], "dn4.csv")
+    fn = os.path.join(cfg['Main']['reportdir'], "neo4j_dn4.csv")
     with open(fn, 'w') as fh:
         fh.write("aanleg;procedure;procedurestap;document\n")
         for row in dnt.iterrows():

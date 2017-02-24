@@ -3,7 +3,7 @@ This script will load Postgres Primary - Foreign Key relations into Neo4J databa
 """
 
 import logging
-from lib import datastore
+from lib import sqlitestore
 from lib import my_env
 from lib import neostore
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         logging.info('Remove nodes with label {l}'.format(l=label))
         ns.remove_nodes(label)
     # Get DataStore object
-    ds = datastore.DataStore(cfg)
+    ds = sqlitestore.DataStore(cfg)
     # Get all Component rows
     rows = ds.get_pg_tables()
     node_info = my_env.LoopInfo("Nodes", 10)

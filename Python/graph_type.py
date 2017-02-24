@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 from graphviz import Digraph
-from lib import datastore
+from lib import sqlitestore
 from lib import my_env
 
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     logging.info("Arguments: {a}".format(a=args))
     # items is the list of components that have been handled.
     items = []
-    ds = datastore.DataStore(cfg)
+    ds = sqlitestore.DataStore(cfg)
     # Configure Graph
     dot = Digraph(comment="Overzicht van de structuur.")
     # Configure Graph

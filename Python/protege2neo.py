@@ -6,12 +6,14 @@ This is done calling applications in sequence.
 import logging
 import os
 import subprocess
+import sys
 from lib import my_env
 
 if __name__ == "__main__":
     cfg = my_env.init_env('convert_protege', __file__)
     (filepath, filename) = os.path.split(__file__)
-    python_path = os.path.join(filepath, 'omv', 'Scripts', 'python')
+    # python_path = os.path.join(filepath, 'omv', 'Scripts', 'python')
+    python_path = sys.executable
     # Convert Protege RDF files into SQLite tables
     script = os.path.join(filepath, '1_rdf2sql.py')
     logging.info("Convert Protege RDF files into SQLite tables")

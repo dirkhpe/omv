@@ -4,7 +4,7 @@ and many times during development.
 """
 
 import logging
-from lib.datastore import DataStore
+from lib.sqlitestore import DataStore
 from lib import my_env
 
 

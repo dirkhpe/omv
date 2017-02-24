@@ -22,7 +22,7 @@ def init_env(projectname, filename):
     """
     projectname = projectname
     modulename = get_modulename(filename)
-    config = get_inifile(projectname, filename)
+    config = get_inifile(projectname)
     my_log = init_loghandler(config, modulename)
     my_log.info('Start Application')
     return config
@@ -86,12 +86,14 @@ def init_loghandler(config, modulename):
     return logger
 
 
-def get_inifile(projectname, scriptname):
+def get_inifile(projectname):
     """
-    Read Project configuration ini file in subdirectory properties.
-    :param projectname: Name of the project.
-    :param scriptname: Name of the calling application. This is used to calculate the config file path.
-    :return: Object reference to the inifile.
+    Read Project configuration ini file in subdirectory properties. Config ini filename is the projectname.
+    The ini file is located in the properties module, which is sibling of the lib module.
+
+    @param projectname: Name of the project.
+
+    @return: Object reference to the inifile.
     """
     # Use Project Name as ini file.
     # TODO: review procedure to get directory name instead of relative properties/ path.
@@ -100,7 +102,9 @@ def get_inifile(projectname, scriptname):
         configfile = projectname + ".ini"
     else:
         # Running Live
-        (filepath, filename) = os.path.split(scriptname)
+        # properties directory is sibling of lib directory.
+        (filepath_lib, _) = os.path.split(__file__)
+        (filepath, _) = os.path.split(filepath_lib)
         # configfile = filepath + "/properties/" + projectname + ".ini"
         configfile = os.path.join(filepath, 'properties', "{p}.ini".format(p=projectname))
     ini_config = configparser.ConfigParser()

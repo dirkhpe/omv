@@ -7,7 +7,7 @@ import logging
 import os
 import sys
 from graphviz import Digraph
-from lib import datastore
+from lib import sqlitestore
 from lib import my_env
 
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     items = []
     cfg = my_env.init_env("convert_protege", __file__)
     logger = logging.getLogger(cfg['Main']['logname'])
-    ds = datastore.DataStore(cfg)
+    ds = sqlitestore.DataStore(cfg)
     # center = "struct_Class30035"
     center = sys.argv[1]
     # Get Node attributes

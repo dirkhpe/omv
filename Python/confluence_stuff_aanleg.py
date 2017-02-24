@@ -6,13 +6,15 @@ reports. It will also get all Dossiertypes and call get_description and get_grap
 import logging
 import os
 import subprocess
+import sys
 from lib import my_env
 from lib import neostore
 
 if __name__ == "__main__":
     cfg = my_env.init_env('convert_protege', __file__)
     (filepath, filename) = os.path.split(__file__)
-    python_path = os.path.join(filepath, 'omv', 'Scripts', 'python')
+    # python_path = os.path.join(filepath, 'omv', 'Scripts', 'python')
+    python_path = sys.executable
     script = os.path.join(filepath, 'get_dn_reports.py')
     logging.info("Run Denormalized Reports script")
     res = subprocess.call([python_path, script], env=os.environ.copy())

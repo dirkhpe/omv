@@ -22,7 +22,7 @@ For a child there are 2 possibilities:
 import logging
 # import os
 # import sys
-from lib.datastore import DataStore
+from lib.sqlitestore import DataStore
 from lib import my_env
 import xml.etree.ElementTree as Et
 
