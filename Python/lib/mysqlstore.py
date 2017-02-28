@@ -10,7 +10,7 @@ Base = declarative_base()
 
 class ArType(Base):
     __tablename__ = "artypes"
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     protege_id = Column(String(256), unique=True, nullable=False)
     label = Column(String(256), nullable=False)
     naam = Column(String(256), nullable=False)
@@ -27,7 +27,7 @@ class ArType(Base):
 
 class ArFase(Base):
     __tablename__ = "arfases"
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     protege_id = Column(String(256), unique=True, nullable=False)
     label = Column(String(256), nullable=False)
     naam = Column(String(256), nullable=False)
@@ -45,7 +45,7 @@ class ArFase(Base):
 
 class ArStap(Base):
     __tablename__ = "arstappen"
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     protege_id = Column(String(256), unique=True, nullable=False)
     label = Column(String(256), nullable=False)
     naam = Column(String(256), nullable=False)
@@ -63,7 +63,7 @@ class ArStap(Base):
 
 class ArDocument(Base):
     __tablename__ = "ardocumenten"
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     protege_id = Column(String(256), unique=True, nullable=False)
     label = Column(String(256), nullable=False)
     naam = Column(String(256), nullable=False)
@@ -78,49 +78,46 @@ class ArDocument(Base):
 
 class ArFase2Type(Base):
     __tablename__ = "arfase2type"
-    id = Column(Integer(), primary_key=True)
-    source_id = Column(Integer(), ForeignKey('arfases.id'))
-    target_id = Column(Integer(), ForeignKey('artypes.id'))
+    source_id = Column(Integer, ForeignKey('arfases.id'), primary_key=True)
+    target_id = Column(Integer, ForeignKey('artypes.id'), primary_key=True)
 
 
 class ArStap2Fase(Base):
     __tablename__ = "arstap2fase"
-    id = Column(Integer(), primary_key=True)
-    source_id = Column(Integer(), ForeignKey('arstappen.id'))
-    target_id = Column(Integer(), ForeignKey('arfases.id'))
+    source_id = Column(Integer, ForeignKey('arstappen.id'), primary_key=True)
+    target_id = Column(Integer, ForeignKey('arfases.id'), primary_key=True)
 
 
 class ArDocument2Stap(Base):
     __tablename__ = "ardocument2stap"
-    id = Column(Integer(), primary_key=True)
-    source_id = Column(Integer(), ForeignKey('ardocumenten.id'))
-    target_id = Column(Integer(), ForeignKey('arstappen.id'))
+    source_id = Column(Integer, ForeignKey('ardocumenten.id'), primary_key=True)
+    target_id = Column(Integer, ForeignKey('arstappen.id'), primary_key=True)
 
 
 class WetBoek(Base):
     __tablename__ = "wetboeken"
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     naam = Column(String(256), nullable=False)
     toc = relationship("WetToc", back_populates="boek")
 
 
 class WetToc(Base):
     __tablename__ = "wettoc"
-    id = Column(Integer(), primary_key=True)
-    boek_id = Column(Integer(), ForeignKey('wetboeken.id'), nullable=False)
-    titel = Column(Integer())
-    hoofdstuk = Column(Integer())
-    afdeling = Column(Integer())
-    onderafdeling = Column(Integer())
+    id = Column(Integer, primary_key=True)
+    boek_id = Column(Integer, ForeignKey('wetboeken.id'), nullable=False)
+    titel = Column(Integer)
+    hoofdstuk = Column(Integer)
+    afdeling = Column(Integer)
+    onderafdeling = Column(Integer)
     boek = relationship("WetBoek", back_populates="toc")
     artikels = relationship("WetArtikel", back_populates="toc")
 
 
 class WetArtikel(Base):
     __tablename__ = "wetartikels"
-    id = Column(Integer(), primary_key=True)
-    toc_id = Column(Integer(), ForeignKey('wettoc.id'), nullable=False)
-    artikel = Column(Integer(), nullable=False)
+    id = Column(Integer, primary_key=True)
+    toc_id = Column(Integer, ForeignKey('wettoc.id'), nullable=False)
+    artikel = Column(Integer, nullable=False)
     toc = relationship("WetToc", back_populates="artikels")
     types = relationship("ArType",
                          secondary="type2artikel",
@@ -138,115 +135,115 @@ class WetArtikel(Base):
 
 class Type2Artikel(Base):
     __tablename__ = "type2artikel"
-    id = Column(Integer(), primary_key=True)
-    type_id = Column(Integer(), ForeignKey('artypes.id'))
-    artikel_id = Column(Integer(), ForeignKey('wetartikels.id'))
+    id = Column(Integer, primary_key=True)
+    type_id = Column(Integer, ForeignKey('artypes.id'))
+    artikel_id = Column(Integer, ForeignKey('wetartikels.id'))
 
 
 class Fase2Artikel(Base):
     __tablename__ = "fase2artikel"
-    id = Column(Integer(), primary_key=True)
-    fase_id = Column(Integer(), ForeignKey('arfases.id'))
-    artikel_id = Column(Integer(), ForeignKey('wetartikels.id'))
+    id = Column(Integer, primary_key=True)
+    fase_id = Column(Integer, ForeignKey('arfases.id'))
+    artikel_id = Column(Integer, ForeignKey('wetartikels.id'))
 
 
 class Stap2Artikel(Base):
     __tablename__ = "stap2artikel"
-    id = Column(Integer(), primary_key=True)
-    stap_id = Column(Integer(), ForeignKey('arstappen.id'))
-    artikel_id = Column(Integer(), ForeignKey('wetartikels.id'))
+    id = Column(Integer, primary_key=True)
+    stap_id = Column(Integer, ForeignKey('arstappen.id'))
+    artikel_id = Column(Integer, ForeignKey('wetartikels.id'))
 
 
 class Document2Artikel(Base):
     __tablename__ = "document2artikel"
-    id = Column(Integer(), primary_key=True)
-    document_id = Column(Integer(), ForeignKey('ardocumenten.id'))
-    artikel_id = Column(Integer(), ForeignKey('wetartikels.id'))
+    id = Column(Integer, primary_key=True)
+    document_id = Column(Integer, ForeignKey('ardocumenten.id'))
+    artikel_id = Column(Integer, ForeignKey('wetartikels.id'))
 
 
 class UpType(Base):
     __tablename__ = "uptypes"
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False)
     naam = Column(String(256), nullable=False)
 
 
 class UpFase(Base):
     __tablename__ = "upfases"
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False)
     naam = Column(String(256), nullable=False)
 
 
 class UpGebeurtenis(Base):
     __tablename__ = "upgebeurtenissen"
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False)
     naam = Column(String(256), nullable=False)
 
 
 class UpStap(Base):
     __tablename__ = "upstappen"
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False)
     naam = Column(String(256), nullable=False)
 
 
 class UpDocument(Base):
     __tablename__ = "updocumenten"
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False)
     naam = Column(String(256), nullable=False)
 
 
 class ArType2UpType(Base):
     __tablename__ = "artype2uptype"
-    id = Column(Integer(), primary_key=True)
-    artype_id = Column(Integer(), ForeignKey('artypes.id'))
-    uptype_id = Column(Integer(), ForeignKey('uptypes.id'))
+    id = Column(Integer, primary_key=True)
+    artype_id = Column(Integer, ForeignKey('artypes.id'))
+    uptype_id = Column(Integer, ForeignKey('uptypes.id'))
 
 
 class ArFase2UpFase(Base):
     __tablename__ = "arfase2upfase"
-    id = Column(Integer(), primary_key=True)
-    arfase_id = Column(Integer(), ForeignKey('arfases.id'))
-    upfase_id = Column(Integer(), ForeignKey('upfases.id'))
+    id = Column(Integer, primary_key=True)
+    arfase_id = Column(Integer, ForeignKey('arfases.id'))
+    upfase_id = Column(Integer, ForeignKey('upfases.id'))
 
 
 class ArStap2UpStap(Base):
     __tablename__ = "arstap2upstap"
-    id = Column(Integer(), primary_key=True)
-    arstap_id = Column(Integer(), ForeignKey('arstappen.id'))
-    upstap_id = Column(Integer(), ForeignKey('upstappen.id'))
+    id = Column(Integer, primary_key=True)
+    arstap_id = Column(Integer, ForeignKey('arstappen.id'))
+    upstap_id = Column(Integer, ForeignKey('upstappen.id'))
 
 
 class ArDocument2UpDocument(Base):
     __tablename__ = "ardocument2updocument"
-    id = Column(Integer(), primary_key=True)
-    ardocument_id = Column(Integer(), ForeignKey('ardocumenten.id'))
-    updocument_id = Column(Integer(), ForeignKey('updocumenten.id'))
+    id = Column(Integer, primary_key=True)
+    ardocument_id = Column(Integer, ForeignKey('ardocumenten.id'))
+    updocument_id = Column(Integer, ForeignKey('updocumenten.id'))
 
 
 class UpGebeurtenis2UpStap(Base):
     __tablename__ = "upgebeurtenis2upstap"
-    id = Column(Integer(), primary_key=True)
-    upgebeurtenis_id = Column(Integer(), ForeignKey('upgebeurtenissen.id'))
-    upstap_id = Column(Integer(), ForeignKey('upstappen.id'))
+    id = Column(Integer, primary_key=True)
+    upgebeurtenis_id = Column(Integer, ForeignKey('upgebeurtenissen.id'))
+    upstap_id = Column(Integer, ForeignKey('upstappen.id'))
 
 
 def init_session(db, user, pwd, echo=False):
     """
     This function configures the connection to the database and returns the session object.
 
-    @param db: Name of the MySQL database.
+    :param db: Name of the MySQL database.
 
-    @param user: User for the connection.
+    :param user: User for the connection.
 
-    @param pwd: Connection password associated with this user.
+    :param pwd: Connection password associated with this user.
 
-    @param echo: True / False, depending if echo is required. Default: False
+    :param echo: True / False, depending if echo is required. Default: False
 
-    @return: session object.
+    :return: session object.
     """
     conn_string = "mysql+pymysql://{u}:{p}@localhost/{db}".format(db=db, u=user, p=pwd)
     engine = set_engine(conn_string, echo)

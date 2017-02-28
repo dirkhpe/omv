@@ -18,10 +18,13 @@ For a child there are 2 possibilities:
     attributes are empty then, but not always. In case text has special characters then attribute will be 'preserve'.
     Attributes and no text: tag is relation type, attribute resource value is target of the link.
 """
+# Allow lib to library import path.
+import os
+import sys
+(pp, cd) = os.path.split(os.getcwd())
+sys.path.append(pp)
 
 import logging
-# import os
-# import sys
 from lib.sqlitestore import DataStore
 from lib import my_env
 import xml.etree.ElementTree as Et
@@ -74,7 +77,7 @@ def handle_instances(cfg):
     root = tree.getroot()
     for el in root:
         # Reset and initialize row dictionary
-        rowdict = {"class": strip_rdf(rdf_value, el.tag)}
+        rowdict = {"category": strip_rdf(rdf_value, el.tag)}
         logging.debug("Element attribs: {attrib}".format(attrib=el.attrib))
         # First handle element attributes
         for k, v in el.attrib.items():

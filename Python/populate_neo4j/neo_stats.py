@@ -21,7 +21,7 @@ class TestNeoStore(unittest.TestCase):
                 'Dossiertype': 14,
                 'ProcedureFase': 20,
                 'ProcedureStap': 33,
-                'Document': 210,
+                'Document': 214,
                 'Artikel': 82,
                 'Boek': 2,
                 'Titel': 10,

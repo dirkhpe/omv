@@ -1,7 +1,7 @@
 """
 This script will get the denormalized reports. The reports with and without document will be generated.
 This script will run the reports using nodes of type 'Aanleg' instead of 'ProcedureFase'.
-Do not use - see documentation in 3_neo_add_aanleg.py.
+Do not use - see documentation in 4_neo_add_aanleg.py.
 """
 
 import os

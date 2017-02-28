@@ -70,12 +70,12 @@ class DataStore:
     def create_table_components(self):
         # Create table
         # Get the field names from Protege - Slots, where Value Type is not Instance.
-        # class and protege_id are fixed and should always be there.
+        # category and protege_id are fixed and should always be there.
         query = """
         CREATE TABLE components
             (id integer primary key autoincrement,
              naam text,
-             class text,
+             category text,
              protege_id text unique,
              label text,
              commentaar text,
@@ -190,7 +190,7 @@ class DataStore:
         This method will return all components with all attributes from the components table 'in_bereik'.
         @return: Array of components. Each component is a dictionary of the array.
         """
-        query = "SELECT * FROM components WHERE NOT class like 'Regelgeving%' AND in_bereik = 'true'"
+        query = "SELECT * FROM components WHERE NOT category like 'Regelgeving%' AND in_bereik = 'true'"
         self.cur.execute(query)
         rows = self.cur.fetchall()
         return rows
@@ -219,30 +219,31 @@ class DataStore:
 
     def get_components_type(self, comp_type='Dossiertype'):
         """
-        This method will return all components of a specific type (class).
-        @param comp_type: Class (type) for which list of components is required. Default: 'Dossiertype'.
+        This method will return all components of a specific type (category).
+        @param comp_type: Category (type) for which list of components is required. Default: 'Dossiertype'.
         @return: List of Protege IDs of the components.
         """
-        query = "SELECT protege_id FROM components WHERE class = ?"
+        query = "SELECT protege_id FROM components WHERE category = ?"
         self.cur.execute(query, (comp_type,))
         rows = self.cur.fetchall()
         return [dt['protege_id'] for dt in rows]
 
     @staticmethod
-    def item_class(item, iclass):
+    def item_category(item, icategory):
         """
-        This function will get an item row and check the class. Item row can be none (not found) or from another class.
+        This function will get an item row and check the category. Item row can be none (not found) or from another
+        category.
         @param item:
-        @param iclass:
-        @return: True if item is from the specified class, False otherwise.
+        @param icategory:
+        @return: True if item is from the specified category, False otherwise.
         """
         if not item:
             logging.error("No Component Row for item")
             return False
-        elif item['class'] != iclass:
-            logging.fatal("Expected class {e} for {i}, but class is {c}".format(i=item['protege_id'],
-                                                                                c=item['class'],
-                                                                                e=iclass))
+        elif item['category'] != icategory:
+            logging.fatal("Expected category {e} for {i}, but category is {c}".format(i=item['protege_id'],
+                                                                                      c=item['category'],
+                                                                                      e=icategory))
             return False
         else:
             return True
@@ -255,8 +256,8 @@ class DataStore:
         """
         # Get attributes for the item
         rec = self.get_comp_attribs(item)
-        # Check attribute class. This needs to be Regelgeving_Item
-        if not self.item_class(rec, 'Regelgeving_Item'):
+        # Check attribute category. This needs to be Regelgeving_Item
+        if not self.item_category(rec, 'Regelgeving_Item'):
             sys.exit(1)
         # OK, this is regelgeving_item. Now create toc.
         if rec['titel_item']:
@@ -279,7 +280,7 @@ class DataStore:
         """
         # Get attributes for the item
         rec = self.get_comp_attribs(item)
-        if not self.item_class(rec, 'Regelgeving_Item'):
+        if not self.item_category(rec, 'Regelgeving_Item'):
             sys.exit(1)
         # OK, this is Regelgeving_Item, Now find artikel
         if rec['artikel']:

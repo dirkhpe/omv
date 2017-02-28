@@ -37,7 +37,7 @@ if __name__ == "__main__":
         bij_procedurestap=ArDocument2Stap
     )
     # First truncate the relations
-    for trunc in cat2class.values():
+    for trunc in cat2rel.values():
         cons_sess.query(trunc).delete()
     # Then truncate the component tables
     for trunc in cat2class.values():

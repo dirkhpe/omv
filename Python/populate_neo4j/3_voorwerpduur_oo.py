@@ -7,6 +7,11 @@ This will be done in steps listed below:
 3. Link new node with 'VoorwerpDuur * Samenstellen Eerste Aanleg'
 4. Remove link 'Openbaar Onderzoek' naar 'VoorwerpDuur * Samenstellen Eerste Aanleg'
 """
+# Allow lib to library import path.
+import os
+import sys
+(pp, cd) = os.path.split(os.getcwd())
+sys.path.append(pp)
 
 import logging
 import uuid

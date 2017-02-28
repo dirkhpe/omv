@@ -1,6 +1,11 @@
 """
 This script will convert Protege data (in sqlite database) and load it in Neo4J database.
 """
+# Allow lib to library import path.
+import os
+import sys
+(pp, cd) = os.path.split(os.getcwd())
+sys.path.append(pp)
 
 import logging
 from lib import sqlitestore
@@ -28,7 +33,7 @@ if __name__ == "__main__":
     node_obj = {}
     node_info = my_env.LoopInfo("Nodes", 10)
     for row in rows:
-        node_label = row["class"]
+        node_label = row["category"]
         valuedict = {}
         for attrib in key_list:
             if row[attrib]:

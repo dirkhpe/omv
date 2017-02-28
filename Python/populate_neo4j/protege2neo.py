@@ -2,11 +2,14 @@
 This script will convert protege data and load it into Neo4J.
 This is done calling applications in sequence.
 """
+# Allow lib to library import path.
+import os
+import sys
+(pp, cd) = os.path.split(os.getcwd())
+sys.path.append(pp)
 
 import logging
-import os
 import subprocess
-import sys
 from lib import my_env
 
 if __name__ == "__main__":

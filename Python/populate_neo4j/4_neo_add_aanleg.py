@@ -4,6 +4,11 @@ However this is not a good procedure. It will add all possible dossiertype - aan
 aanleg - procedurestap links. This combines to cartesian product dossiertype - aanleg - procedurestap, and this is not
 necessary required.
 """
+# Allow lib to library import path.
+import os
+import sys
+(pp, cd) = os.path.split(os.getcwd())
+sys.path.append(pp)
 
 import logging
 from lib import my_env
