@@ -4,6 +4,11 @@ the structure Titel - Hoofdstuk - Afdeling - Onderafdeling. Each line in table o
 category. The sequence of table of contents file determines the table. This means that parents are above children.
 The assumption is that categories are in correct sequence.
 """
+# Allow lib to library import path.
+import os
+import sys
+(pp, cd) = os.path.split(os.getcwd())
+sys.path.append(pp)
 
 import argparse
 import logging

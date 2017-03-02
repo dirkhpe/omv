@@ -25,6 +25,7 @@ class ArType(Base):
     def __repr__(self):
         return "Dossiertype(naam={t})".format(t=self.naam)
 
+
 class ArFase(Base):
     __tablename__ = "arfases"
     id = Column(Integer, primary_key=True)
@@ -109,6 +110,8 @@ class WetToc(Base):
     hoofdstuk = Column(Integer)
     afdeling = Column(Integer)
     onderafdeling = Column(Integer)
+    label = Column(String(256), nullable=False)
+    item = Column(String(256), nullable=False)
     boek = relationship("WetBoek", back_populates="toc")
     artikels = relationship("WetArtikel", back_populates="toc")
 
@@ -135,30 +138,26 @@ class WetArtikel(Base):
 
 class Type2Artikel(Base):
     __tablename__ = "type2artikel"
-    id = Column(Integer, primary_key=True)
-    type_id = Column(Integer, ForeignKey('artypes.id'))
-    artikel_id = Column(Integer, ForeignKey('wetartikels.id'))
+    protege_id = Column(String(256), ForeignKey('artypes.protege_id'), primary_key=True)
+    artikel_id = Column(Integer, ForeignKey('wetartikels.id'), primary_key=True)
 
 
 class Fase2Artikel(Base):
     __tablename__ = "fase2artikel"
-    id = Column(Integer, primary_key=True)
-    fase_id = Column(Integer, ForeignKey('arfases.id'))
-    artikel_id = Column(Integer, ForeignKey('wetartikels.id'))
+    protege_id = Column(String(256), ForeignKey('arfases.protege_id'), primary_key=True)
+    artikel_id = Column(Integer, ForeignKey('wetartikels.id'), primary_key=True)
 
 
 class Stap2Artikel(Base):
     __tablename__ = "stap2artikel"
-    id = Column(Integer, primary_key=True)
-    stap_id = Column(Integer, ForeignKey('arstappen.id'))
-    artikel_id = Column(Integer, ForeignKey('wetartikels.id'))
+    protege_id = Column(String(256), ForeignKey('arstappen.protege_id'), primary_key=True)
+    artikel_id = Column(Integer, ForeignKey('wetartikels.id'), primary_key=True)
 
 
 class Document2Artikel(Base):
     __tablename__ = "document2artikel"
-    id = Column(Integer, primary_key=True)
-    document_id = Column(Integer, ForeignKey('ardocumenten.id'))
-    artikel_id = Column(Integer, ForeignKey('wetartikels.id'))
+    protege_id = Column(String(256), ForeignKey('ardocumenten.protege_id'), primary_key=True)
+    artikel_id = Column(Integer, ForeignKey('wetartikels.id'), primary_key=True)
 
 
 class UpType(Base):
@@ -198,37 +197,32 @@ class UpDocument(Base):
 
 class ArType2UpType(Base):
     __tablename__ = "artype2uptype"
-    id = Column(Integer, primary_key=True)
-    artype_id = Column(Integer, ForeignKey('artypes.id'))
-    uptype_id = Column(Integer, ForeignKey('uptypes.id'))
+    artype_id = Column(Integer, ForeignKey('artypes.id'), primary_key=True)
+    uptype_id = Column(Integer, ForeignKey('uptypes.id'), primary_key=True)
 
 
 class ArFase2UpFase(Base):
     __tablename__ = "arfase2upfase"
-    id = Column(Integer, primary_key=True)
-    arfase_id = Column(Integer, ForeignKey('arfases.id'))
-    upfase_id = Column(Integer, ForeignKey('upfases.id'))
+    arfase_id = Column(Integer, ForeignKey('arfases.id'), primary_key=True)
+    upfase_id = Column(Integer, ForeignKey('upfases.id'), primary_key=True)
 
 
 class ArStap2UpStap(Base):
     __tablename__ = "arstap2upstap"
-    id = Column(Integer, primary_key=True)
-    arstap_id = Column(Integer, ForeignKey('arstappen.id'))
-    upstap_id = Column(Integer, ForeignKey('upstappen.id'))
+    arstap_id = Column(Integer, ForeignKey('arstappen.id'), primary_key=True)
+    upstap_id = Column(Integer, ForeignKey('upstappen.id'), primary_key=True)
 
 
 class ArDocument2UpDocument(Base):
     __tablename__ = "ardocument2updocument"
-    id = Column(Integer, primary_key=True)
-    ardocument_id = Column(Integer, ForeignKey('ardocumenten.id'))
-    updocument_id = Column(Integer, ForeignKey('updocumenten.id'))
+    ardocument_id = Column(Integer, ForeignKey('ardocumenten.id'), primary_key=True)
+    updocument_id = Column(Integer, ForeignKey('updocumenten.id'), primary_key=True)
 
 
 class UpGebeurtenis2UpStap(Base):
     __tablename__ = "upgebeurtenis2upstap"
-    id = Column(Integer, primary_key=True)
-    upgebeurtenis_id = Column(Integer, ForeignKey('upgebeurtenissen.id'))
-    upstap_id = Column(Integer, ForeignKey('upstappen.id'))
+    upgebeurtenis_id = Column(Integer, ForeignKey('upgebeurtenissen.id'), primary_key=True)
+    upstap_id = Column(Integer, ForeignKey('upstappen.id'), primary_key=True)
 
 
 def init_session(db, user, pwd, echo=False):

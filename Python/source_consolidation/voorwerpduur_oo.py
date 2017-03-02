@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # 1. Create Stap 'Openbaar Onderzoek bij bekendmaking inspraakprocedure'
     oo_inspraak = ArStap(
         protege_id='OpenbaarOnderzoekBekendmaking',
-        label='Openbaar Onderzoek bij Bekendmaking',
+        label='Openbaar Onderzoek bij Bekendm                                                                                                                                       aking',
         naam='Openbaar Onderzoek bij Bekendmaking',
         commentaar='Openbaar Onderzoek bij Bekendmaking - Extra stap',
     )
