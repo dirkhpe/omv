@@ -163,28 +163,28 @@ class Document2Artikel(Base):
 class UpType(Base):
     __tablename__ = "uptypes"
     id = Column(Integer, primary_key=True)
-    code = Column(String(256), nullable=False)
+    code = Column(String(256), nullable=False, unique=True)
     naam = Column(String(256), nullable=False)
 
 
 class UpFase(Base):
     __tablename__ = "upfases"
     id = Column(Integer, primary_key=True)
-    code = Column(String(256), nullable=False)
+    code = Column(String(256), nullable=False, unique=True)
     naam = Column(String(256), nullable=False)
 
 
 class UpGebeurtenis(Base):
     __tablename__ = "upgebeurtenissen"
     id = Column(Integer, primary_key=True)
-    code = Column(String(256), nullable=False)
+    code = Column(String(256), nullable=False, unique=True)
     naam = Column(String(256), nullable=False)
 
 
 class UpStap(Base):
     __tablename__ = "upstappen"
     id = Column(Integer, primary_key=True)
-    code = Column(String(256), nullable=False)
+    code = Column(String(256))
     naam = Column(String(256), nullable=False)
 
 
