@@ -10,6 +10,7 @@ import logging.handlers
 import os
 import platform
 import sys
+import subprocess
 from datetime import datetime
 
 
@@ -176,3 +177,17 @@ class LoopInfo:
         curr_time = datetime.now().strftime("%H:%M:%S")
         print("{0} - {1} {2} handled - End.\n".format(curr_time, str(self.rec_cnt), str(self.attribname)))
         return
+
+
+def run_script(path, script_name, *args):
+    """
+    This function will run a python script with arguments.
+    @param path: Full path to the script.
+    @param script_name: Name of the script. Include .py if this is the script extension.
+    @param args: List of script arguments.
+    @return:
+    """
+    script_path = os.path.join(path, script_name)
+    cmd = [sys.executable, script_path] + list(args)
+    subprocess.call(cmd, env=os.environ.copy())
+    return

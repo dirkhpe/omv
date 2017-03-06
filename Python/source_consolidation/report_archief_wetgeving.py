@@ -1,6 +1,5 @@
 """
-This script will report on the data from the 'Regelgeving'. It will create the fully denormalized report from
-Wetgeving.
+This script will report on the data from the 'Regelgeving' and any possibility from Uitwisselingsplatform.
 """
 # Allow lib to library import path.
 import os

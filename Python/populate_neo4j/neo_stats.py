@@ -22,7 +22,7 @@ class TestNeoStore(unittest.TestCase):
                 'ProcedureFase': 20,
                 'ProcedureStap': 33,
                 'Document': 214,
-                'Artikel': 82,
+                'Artikel': 86,
                 'Boek': 2,
                 'Titel': 10,
                 'Hoofdstuk': 46,

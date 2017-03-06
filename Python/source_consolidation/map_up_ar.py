@@ -8,7 +8,6 @@ import sys
 (pp, cd) = os.path.split(os.getcwd())
 sys.path.append(pp)
 
-import logging
 from collections import namedtuple
 from lib import my_env
 from lib import mysqlstore as mysql
@@ -33,19 +32,16 @@ def get_named_row(nr_name, col_hrd):
     return named_row
 
 
-if __name__ == "__main__":
-    # Configure Command line argumentsb
-    cfg = my_env.init_env("convert_protege", __file__)
-    # Get session for Consolidation Database
-    cons_sess = mysql.init_session(db=cfg["ConsolidationDB"]["db"],
-                                   user=cfg["ConsolidationDB"]["user"],
-                                   pwd=cfg["ConsolidationDB"]["pwd"])
-    # Get Workbook information
-    wb = load_workbook(cfg['Main']['cons_excel'], read_only=True)
-    # Work on link 'Gebeurtenis - Stap'
-    ws = wb['Gebeurtenis']
+def handle_gebeurtenis(worksheet):
+    """
+    This function will handle the worksheet 'gebeurtenis' to populate tables upgebeurtenissen, upstappen and
+    upgebeurtenis2upstap.
+    @param worksheet: Excel Worksheet with gebeurtenis to stap information.
+    @return:
+    """
+    logging.info("Handling Gebeurtenis")
     # Convert worksheet info to list of rows.
-    row_list = list(ws.rows)
+    row_list = list(worksheet.rows)
     # Get name tuple from title row
     title_row = row_list.pop(0)
     nr = get_named_row('Gebeurtenis', title_row)
@@ -74,10 +70,19 @@ if __name__ == "__main__":
         )
         cons_sess.add(gebeurtenis2stap)
     cons_sess.flush()
-    # Then work on Fases
-    ws = wb['Fase']
+    return
+
+
+def handle_fase(worksheet):
+    """
+    This function will handle the worksheet Fase. It links the fase from Uitwisselingsplatform (UP) with the fase from
+    Archief (AR).
+    @param worksheet: Pointer to the Fase Worksheet.
+    @return:
+    """
+    logging.info("Handling Fase")
     # Convert worksheet info to list of rows.
-    row_list = list(ws.rows)
+    row_list = list(worksheet.rows)
     # Get name tuple from title row
     title_row = row_list.pop(0)
     nr = get_named_row('Fase', title_row)
@@ -99,18 +104,28 @@ if __name__ == "__main__":
         )
         cons_sess.add(arfase2upfase)
     cons_sess.flush()
-    # Then work on Dossiertype
-    ws = wb['Dossiertype']
+    return
+
+
+def handle_dossiertype(worksheet):
+    """
+    This procedure will handle the worksheet 'Dossiertype' to link Archief Dossiertypes with the codes from
+    Uitwisselingsplatform.
+    @param worksheet: Pointer to the Dossiertype worksheet.
+    @return:
+    """
+    logging.info("Handling Dossiertype")
     # Convert worksheet info to list of rows.
-    row_list = list(ws.rows)
+    row_list = list(worksheet.rows)
     # Get name tuple from title row
-    title_row = row_list.pop(0)
     # In this case title row is on the second row.
+    row_list.pop(0)
     title_row = row_list.pop(0)
     nr = get_named_row('Dossiertype', title_row)
     types = {}
     for row in map(nr._make, row_list):
-        if row.code.value:
+        # Set up connection if both Archief and Code are available:
+        if row.Archief.value and row.code.value:
             code_naam = row.code.value
             ar_naam = row.Archief.value
             try:
@@ -119,12 +134,102 @@ if __name__ == "__main__":
                 uptype = cons_sess.query(UpType).filter_by(code=code_naam).one()
                 types[code_naam] = uptype.id
                 uptype_id = types[code_naam]
-            artype = cons_sess.query(ArType).filter_by(naam=ar_naam)
+            artype = cons_sess.query(ArType).filter_by(naam=ar_naam).one()
             artype_id = artype.id
             artype2uptype = ArType2UpType(
                 artype_id=artype_id,
                 uptype_id=uptype_id
             )
             cons_sess.add(artype2uptype)
+    return
+
+
+def handle_stappen(worksheet):
+    """
+    This procedure will handle the worksheet 'Stappen' to link Archief Stappen with the codes from
+    Uitwisselingsplatform.
+    @param worksheet: Pointer to the Stappen worksheet.
+    @return:
+    """
+    logging.info("Handling Stappen")
+    # Convert worksheet info to list of rows.
+    row_list = list(worksheet.rows)
+    # Get name tuple from title row
+    title_row = row_list.pop(0)
+    nr = get_named_row('Stappen', title_row)
+    stappen = {}
+    for row in map(nr._make, row_list):
+        procedurestap = row.ProcedureStap.value
+        protege_id = row.protege_id.value
+        try:
+            upstap_id = stappen[procedurestap]
+        except KeyError:
+            upstap = cons_sess.query(UpStap).filter_by(naam=procedurestap).one()
+            stappen[procedurestap] = upstap.id
+            upstap_id = stappen[procedurestap]
+        arstap = cons_sess.query(ArStap).filter_by(protege_id=protege_id).one()
+        arstap_id = arstap.id
+        arstap2upstap = ArStap2UpStap(
+            arstap_id=arstap_id,
+            upstap_id=upstap_id
+        )
+        cons_sess.add(arstap2upstap)
+    return
+
+
+def handle_documenten(worksheet):
+    """
+    This procedure will handle the worksheet 'Document' to link Archief Document with the codes from
+    Uitwisselingsplatform.
+    @param worksheet: Pointer to the Document worksheet.
+    @return:
+    """
+    logging.info("Handling Documenten")
+    # Convert worksheet info to list of rows.
+    row_list = list(worksheet.rows)
+    # Get name tuple from title row
+    title_row = row_list.pop(0)
+    nr = get_named_row('Document', title_row)
+    documenten = {}
+    for row in map(nr._make, row_list):
+        if row.Koppeling.value:
+            code = row.code.value
+            protege_id = row.Koppeling.value
+            try:
+                ardocument_id = documenten[protege_id]
+            except KeyError:
+                ardocument = cons_sess.query(ArDocument).filter_by(protege_id=protege_id).one()
+                documenten[protege_id] = ardocument.id
+                ardocument_id = documenten[protege_id]
+            updocument = cons_sess.query(UpDocument).filter_by(code=code).one()
+            updocument_id = updocument.id
+            ardocument2updocument = ArDocument2UpDocument(
+                ardocument_id=ardocument_id,
+                updocument_id=updocument_id
+            )
+            cons_sess.add(ardocument2updocument)
+    return
+
+
+if __name__ == "__main__":
+    # Configure Command line argumentsb
+    cfg = my_env.init_env("convert_protege", __file__)
+    # Get session for Consolidation Database
+    cons_sess = mysql.init_session(db=cfg["ConsolidationDB"]["db"],
+                                   user=cfg["ConsolidationDB"]["user"],
+                                   pwd=cfg["ConsolidationDB"]["pwd"])
+    # Get Workbook information
+    wb = load_workbook(cfg['Main']['cons_excel'], read_only=True)
+    # Work on link 'Gebeurtenis - Stap'
+    handle_gebeurtenis(worksheet=wb['Gebeurtenis'])
+    # Then work on Fases
+    handle_fase(worksheet=wb['Fase'])
+    # Then work on Dossiertype
+    handle_dossiertype(worksheet=wb['Dossiertype'])
+    # Work on Stappen: connect procedure stappen from Archief en Uitwisselingsplatform.
+    handle_stappen(worksheet=wb['Stappen'])
+    # Work on the Documenten
+    handle_documenten(worksheet=wb['Document'])
+    # Commit all data to the database.
     cons_sess.commit()
     logging.info('End Application')

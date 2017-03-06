@@ -1,5 +1,7 @@
 # Consolidation for mysql related functions
 
+import logging
+import pymysql
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
@@ -223,6 +225,36 @@ class UpGebeurtenis2UpStap(Base):
     __tablename__ = "upgebeurtenis2upstap"
     upgebeurtenis_id = Column(Integer, ForeignKey('upgebeurtenissen.id'), primary_key=True)
     upstap_id = Column(Integer, ForeignKey('upstappen.id'), primary_key=True)
+
+
+class DirectConn:
+    """
+    This class will set up a direct connection to MySQL. The purpose of the class is to reset the database vo_omv_ar.
+    The current database will be dropped, then the new database will be created.
+    Finally all tables will be created using SQLAlchemy library
+    """
+
+    def __init__(self, db, user, pwd):
+        mysql_conn = dict(
+            host="localhost",
+            port=3306,
+            user=user,
+            passwd=pwd,
+            db='information_schema'
+        )
+        conn = pymysql.connect(**mysql_conn)
+        cur = conn.cursor()
+        query = "DROP DATABASE {db}".format(db=db)
+        logging.info(query)
+        cur.execute(query)
+        query = "CREATE DATABASE {db}".format(db=db)
+        logging.info(query)
+        cur.execute(query)
+        conn.close()
+        # Now use sqlalchemy connection to build database
+        conn_string = "mysql+pymysql://{u}:{p}@localhost/{db}".format(db=db, u=user, p=pwd)
+        engine = set_engine(conn_string)
+        Base.metadata.create_all(engine)
 
 
 def init_session(db, user, pwd, echo=False):

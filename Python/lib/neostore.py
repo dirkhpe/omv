@@ -395,6 +395,5 @@ class NeoStore:
                   AND t.{nid} = '{t_nid}'
                 DELETE r
                 """.format(rel=rel_type, nid=nid, f_nid=from_node_id, t_nid=to_node_id)
-        logging.info("Query to remove relation: \n{query}".format(query=query))
         self.graph.run(query)
         return
