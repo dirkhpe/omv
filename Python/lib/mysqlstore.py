@@ -23,6 +23,9 @@ class ArType(Base):
     artikels = relationship("WetArtikel",
                             secondary="type2artikel",
                             back_populates="types")
+    upcomps = relationship("UpType",
+                           secondary="artype2uptype",
+                           back_populates="arcomps")
 
     def __repr__(self):
         return "Dossiertype(naam={t})".format(t=self.naam)
@@ -44,6 +47,9 @@ class ArFase(Base):
     artikels = relationship("WetArtikel",
                             secondary="fase2artikel",
                             back_populates="fases")
+    upcomps = relationship("UpFase",
+                           secondary="arfase2upfase",
+                           back_populates="arcomps")
 
 
 class ArStap(Base):
@@ -62,6 +68,9 @@ class ArStap(Base):
     artikels = relationship("WetArtikel",
                             secondary="stap2artikel",
                             back_populates="stappen")
+    upcomps = relationship("UpStap",
+                           secondary="arstap2upstap",
+                           back_populates="arcomps")
 
 
 class ArDocument(Base):
@@ -77,6 +86,9 @@ class ArDocument(Base):
     artikels = relationship("WetArtikel",
                             secondary="document2artikel",
                             back_populates="documenten")
+    upcomps = relationship("UpDocument",
+                           secondary="ardocument2updocument",
+                           back_populates="arcomps")
 
 
 class ArFase2Type(Base):
@@ -167,6 +179,9 @@ class UpType(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False, unique=True)
     naam = Column(String(256), nullable=False)
+    arcomps = relationship("ArType",
+                           secondary="artype2uptype",
+                           back_populates="upcomps")
 
 
 class UpFase(Base):
@@ -174,6 +189,9 @@ class UpFase(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False, unique=True)
     naam = Column(String(256), nullable=False)
+    arcomps = relationship("ArFase",
+                           secondary="arfase2upfase",
+                           back_populates="upcomps")
 
 
 class UpGebeurtenis(Base):
@@ -188,6 +206,9 @@ class UpStap(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(256))
     naam = Column(String(256), nullable=False)
+    arcomps = relationship("ArStap",
+                           secondary="arstap2upstap",
+                           back_populates="upcomps")
 
 
 class UpDocument(Base):
@@ -195,6 +216,9 @@ class UpDocument(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False)
     naam = Column(String(256), nullable=False)
+    arcomps = relationship("ArDocument",
+                           secondary="ardocument2updocument",
+                           back_populates="upcomps")
 
 
 class ArType2UpType(Base):
