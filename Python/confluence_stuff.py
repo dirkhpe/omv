@@ -14,7 +14,7 @@ if __name__ == "__main__":
     logger = logging.getLogger(cfg['Main']['logname'])
     (filepath, filename) = os.path.split(__file__)
     python_path = os.path.join(filepath, 'omv', 'Scripts', 'python')
-    script = os.path.join(filepath, 'get_dn_reports.py')
+    script = os.path.join(filepath, 'report_protege.py')
     logger.info("Run Denormalized Reports script")
     res = subprocess.call([python_path, script], env=os.environ.copy())
     ns = neostore.NeoStore(cfg)

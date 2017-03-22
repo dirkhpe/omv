@@ -199,6 +199,9 @@ class UpGebeurtenis(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False, unique=True)
     naam = Column(String(256), nullable=False)
+    upstap = relationship("UpStap",
+                          secondary="upgebeurtenis2upstap",
+                          back_populates="gebeurtenissen")
 
 
 class UpStap(Base):
@@ -209,6 +212,9 @@ class UpStap(Base):
     arcomps = relationship("ArStap",
                            secondary="arstap2upstap",
                            back_populates="upcomps")
+    gebeurtenissen = relationship("UpGebeurtenis",
+                                  secondary="upgebeurtenis2upstap",
+                                  back_populates="upstap")
 
 
 class UpDocument(Base):

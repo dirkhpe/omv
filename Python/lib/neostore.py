@@ -14,7 +14,9 @@ class NeoStore:
     def __init__(self, config):
         """
         Method to instantiate the class in an object for the neostore.
+
         :param config object, to get connection parameters.
+
         :return: Object to handle neostore commands.
         """
         logging.debug("Initializing Neostore object")
@@ -26,6 +28,7 @@ class NeoStore:
     def _connect2db(self):
         """
         Internal method to create a database connection. This method is called during object initialization.
+
         :return: Database handle and cursor for the database.
         """
         logging.debug("Creating Neostore object.")
@@ -46,8 +49,10 @@ class NeoStore:
     def calc_nodes(self, label):
         """
         This function will calculate the number of nodes for the label specified
-        @param label: Calculate number of nodes for this label
-        @return: Number of nodes
+
+        :param label: Calculate number of nodes for this label
+
+        :return: Number of nodes
         """
         query = "MATCH (n:{label}) RETURN count(n) as cnt".format(label=label)
         df = DataFrame(self.graph.run(query).data())
@@ -58,7 +63,7 @@ class NeoStore:
     def denorm_table_3(self):
         """
         Function to return denormalized table (Dossiertype, ProcedureFase, Procedurestap)
-        @return: denormalized table with columns aanleg, procedure, procedurestap
+        :return: denormalized table with columns aanleg, procedure, procedurestap
         """
         query = """
                 match (a:Dossiertype)<-[:voor_dossiertype]-(b:ProcedureFase)<-[:in_procedure]-(c:ProcedureStap)
@@ -66,6 +71,68 @@ class NeoStore:
                 """
         dnt = DataFrame(self.graph.run(query).data())
         return dnt
+
+    def denorm_table_3_artikel(self):
+        """
+        Function to return denormalized table (Dossiertype, ProcedureFase, Procedurestap) and artikel numbers (if
+        applicable).
+
+        :return: denormalized table with columns aanleg, procedure, procedurestap and artikel / boek combinations per
+        column.
+        """
+        query = """
+                match (a:Dossiertype)<-[:voor_dossiertype]-(b:ProcedureFase)<-[:in_procedure]-(c:ProcedureStap)
+                optional match (a)-[:in_artikel]->(a1)-[:artikel_in_boek]->(a2)
+                optional match (b)-[:in_artikel]->(b1)-[:artikel_in_boek]->(b2)
+                optional match (c)-[:in_artikel]->(c1)-[:artikel_in_boek]->(c2)
+                return a.naam as procedure, b.naam as aanleg, c.naam as procedurestap,
+                a1.artikel as a_artikel, a2.item as a_boek,
+                b1.artikel as b_artikel, b2.item as b_boek,
+                c1.artikel as c_artikel, c2.item as c_boek
+                """
+        dnt = self.graph.run(query).data()
+        dossier_item_list = {}
+        decreet = {}
+        besluit = {}
+        for rec in dnt:
+            dossier_item = "{dt};{pf};{ps}".format(dt=rec['procedure'], pf=rec['aanleg'], ps=rec['procedurestap'])
+            dossier_item_list[dossier_item] = 1
+            decreet, besluit = handle_artikel(decreet, besluit, dossier_item, rec['a_artikel'], rec['a_boek'])
+            decreet, besluit = handle_artikel(decreet, besluit, dossier_item, rec['b_artikel'], rec['b_boek'])
+            decreet, besluit = handle_artikel(decreet, besluit, dossier_item, rec['c_artikel'], rec['c_boek'])
+        return dossier_item_list, decreet, besluit
+
+    def denorm_table_4_artikel(self):
+        """
+        Function to return denormalized table (Dossiertype, ProcedureFase, Procedurestap, Document)
+        @return: denormalized table with columns aanleg, procedure, procedurestap, document
+        """
+        query = """
+                match (a:Dossiertype)<-[:voor_dossiertype]-(b:ProcedureFase)<-[:in_procedure]-(c:ProcedureStap)
+                      <-[:bij_procedurestap]-(d:Document)
+                optional match (a)-[:in_artikel]->(a1)-[:artikel_in_boek]->(a2)
+                optional match (b)-[:in_artikel]->(b1)-[:artikel_in_boek]->(b2)
+                optional match (c)-[:in_artikel]->(c1)-[:artikel_in_boek]->(c2)
+                optional match (d)-[:in_artikel]->(d1)-[:artikel_in_boek]->(d2)
+                return b.naam as aanleg, a.naam as procedure, c.naam as procedurestap, d.naam as document,
+                a1.artikel as a_artikel, a2.item as a_boek,
+                b1.artikel as b_artikel, b2.item as b_boek,
+                c1.artikel as c_artikel, c2.item as c_boek,
+                d1.artikel as d_artikel, d2.item as d_boek
+                """
+        dnt = self.graph.run(query).data()
+        dossier_item_list = {}
+        decreet = {}
+        besluit = {}
+        for rec in dnt:
+            dossier_item = "{dt};{pf};{ps};{doc}".format(dt=rec['procedure'], pf=rec['aanleg'],
+                                                         ps=rec['procedurestap'], doc=rec['document'])
+            dossier_item_list[dossier_item] = 1
+            decreet, besluit = handle_artikel(decreet, besluit, dossier_item, rec['a_artikel'], rec['a_boek'])
+            decreet, besluit = handle_artikel(decreet, besluit, dossier_item, rec['b_artikel'], rec['b_boek'])
+            decreet, besluit = handle_artikel(decreet, besluit, dossier_item, rec['c_artikel'], rec['c_boek'])
+            decreet, besluit = handle_artikel(decreet, besluit, dossier_item, rec['d_artikel'], rec['d_boek'])
+        return dossier_item_list, decreet, besluit
 
     def denorm_table_4(self):
         """
@@ -397,3 +464,19 @@ class NeoStore:
                 """.format(rel=rel_type, nid=nid, f_nid=from_node_id, t_nid=to_node_id)
         self.graph.run(query)
         return
+
+
+def handle_artikel(decreet, besluit, dossier_item, artikel, boek):
+    if artikel:
+        artikel = int(artikel)
+        if boek == 'Decreet':
+            try:
+                decreet[dossier_item].append(artikel)
+            except KeyError:
+                decreet[dossier_item] = [artikel]
+        else:
+            try:
+                besluit[dossier_item].append(artikel)
+            except KeyError:
+                besluit[dossier_item] = [artikel]
+    return decreet, besluit

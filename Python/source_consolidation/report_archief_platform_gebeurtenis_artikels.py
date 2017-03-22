@@ -39,6 +39,35 @@ def list_of_tx(arcomp, comp_id, prev_comp=None):
     return list_tx
 
 
+def list_of_gebeurtenis(arcomp, comp_id, prev_comp=None):
+    """
+    This function will get all the translations for this specific arstap to upstap, then to gebeurtenis.
+    I know that each arstap translates to exactly one upstap. Each upstap translates to many gebeurtenissen.
+
+    :param arcomp: Class for the Archief Component. This is always ArStap in this case.
+
+    :param comp_id: ID for the Archief component arstap
+
+    :param prev_comp: If previous component is not translated, then this component does not need to be translated
+
+    :return: List of translations.
+    """
+    not_translated = " . "
+    list_tx = []
+    if prev_comp != not_translated:
+        # Get my upstap name for this arstap
+        f_arstap = cons_sess.query(arcomp).filter_by(id=comp_id).filter(arcomp.upcomps.any()).one()
+        f_upstap = f_arstap.upcomps[0]
+        for gebeurtenissen in cons_sess.query(UpStap).filter_by(id=f_upstap.id).filter(UpStap.gebeurtenissen.any()):
+            for gebeurtenis in gebeurtenissen.gebeurtenissen:
+                # list_tx.append("{s};{g}".format(s=upstap, g=gebeurtenis.naam))
+                list_tx.append(gebeurtenis.naam)
+    if len(list_tx) == 0:
+        list_tx.append(not_translated)
+    # logging.info("{s}: {g}".format(s=upstap_naam, g=list_tx))
+    return list_tx
+
+
 if __name__ == "__main__":
 
     cfg = my_env.init_env("convert_protege", __file__)
@@ -49,7 +78,7 @@ if __name__ == "__main__":
                                    pwd=cfg["ConsolidationDB"]["pwd"],
                                    echo=False)
 
-    fn = os.path.join(cfg['Main']['reportdir'], "dn3_platform_archief_artikel.csv")
+    fn = os.path.join(cfg['Main']['reportdir'], "dn3_archief_platform_gebeurtenis_artikels.csv")
     with open(fn, 'w') as fh:
         fh.write("decreet;besluit;dossiertype;fase;stap;;dossiertype;fase;stap\n")
         for artype in cons_sess.query(ArType).filter(ArType.fases.any()):
@@ -69,9 +98,9 @@ if __name__ == "__main__":
                                                      uptype=uptype, upfase=upfase, upstap=upstap,
                                                      decreet=decreet, besluit=besluit))
 
-    fn = os.path.join(cfg['Main']['reportdir'], "dn4_platform_archief_artikel.csv")
+    fn = os.path.join(cfg['Main']['reportdir'], "dn4_archief_platform_gebeurtenis_artikels.csv")
     with open(fn, 'w') as fh:
-        fh.write("decreet;besluit;dossiertype;fase;stap;document;;dossiertype;fase;stap;document\n")
+        fh.write("decreet;besluit;dossiertype;fase;stap;document;;dossiertype;fase;gebeurtenis;document\n")
         for artype in cons_sess.query(ArType).filter(ArType.fases.any()):
             type_decreet, type_besluit = my_env.get_artikels(cons_sess, ArType, artype.id)
             for uptype in list_of_tx(ArType, artype.id):
@@ -81,7 +110,7 @@ if __name__ == "__main__":
                         for arstap2fase in cons_sess.query(ArFase).filter_by(id=arfase.id).filter(ArFase.stappen.any()):
                             for arstap in arstap2fase.stappen:
                                 stap_decreet, stap_besluit = my_env.get_artikels(cons_sess, ArStap, arstap.id)
-                                for upstap in list_of_tx(ArStap, arstap.id, prev_comp=upfase):
+                                for upstap in list_of_gebeurtenis(ArStap, arstap.id, prev_comp=upfase):
                                     for ardocument2stap in cons_sess.query(ArStap).filter_by(id=arstap.id)\
                                             .filter(ArStap.documenten.any()):
                                         for ardocument in ardocument2stap.documenten:
