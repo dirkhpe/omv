@@ -20,6 +20,7 @@ class Write2Excel:
         """
         self.wb = Workbook()
         self.current_sheet = self.wb.active
+        self.rowcnt = 0
 
     def init_sheet(self, title):
         """
@@ -34,9 +35,10 @@ class Write2Excel:
             self.current_sheet.title = title
         else:
             # There are sheets already, finalize the sheet and create a new one
-            finalize_sheet(self.current_sheet)
+            finalize_sheet(self.current_sheet, self.rowcnt)
             self.current_sheet = self.wb.create_sheet(title=title)
         initialize_sheet(self.current_sheet)
+        self.rowcnt = 2
         return self.current_sheet
 
     def close_workbook(self, filename):
@@ -45,14 +47,37 @@ class Write2Excel:
         :param filename:
         :return:
         """
-        finalize_sheet(self.current_sheet)
+        finalize_sheet(self.current_sheet, self.rowcnt)
         self.wb.save(filename=filename)
+        return
+
+    def write_line(self, content):
+
+        if 'Laatste Aanleg' in content['arfase']:
+            bg_color = 'FFC000' # Orange
+        elif ('Samenstellen' in content['arfase']) or ('Dossier' in content['arstap']):
+            # Fase: Eerste Aanleg - Stap: Samenstellen of Indienen Dossier.
+            bg_color = 'FFFF00' # Yellow
+        else:
+            # Fase: Eerste Aanleg - Behandeling
+            bg_color = '92D050' # Green
+
+        fill_cell = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
+        self.rowcnt += 1
+        self.current_sheet[rc2a1(self.rowcnt, 1)] = content['decreet']
+        self.current_sheet[rc2a1(self.rowcnt, 2)] = content['besluit']
+        self.current_sheet[rc2a1(self.rowcnt, 3)] = content['arstap']
+        self.current_sheet[rc2a1(self.rowcnt, 4)] = content['ardoc']
+        self.current_sheet[rc2a1(self.rowcnt, 5)] = content['updoc']
+        self.current_sheet[rc2a1(self.rowcnt, 6)] = content['gebeurtenis']
+        for cnt in range(1,7):
+            self.current_sheet[rc2a1(self.rowcnt, cnt)].fill = fill_cell
         return
 
 
 def initialize_sheet(ws):
 
-    # ws1.auto_filter.ref = "A2:F100"
+
 
     # Set column width
     ws.column_dimensions[get_column_letter(1)].width = 10
@@ -60,7 +85,7 @@ def initialize_sheet(ws):
     ws.column_dimensions[get_column_letter(3)].width = 32
     ws.column_dimensions[get_column_letter(4)].width = 72
     ws.column_dimensions[get_column_letter(5)].width = 72
-    ws.column_dimensions[get_column_letter(6)].width = 32
+    ws.column_dimensions[get_column_letter(6)].width = 100
 
     # Set row height
     ws.row_dimensions[1].height = 24
@@ -97,14 +122,15 @@ def initialize_sheet(ws):
         set_bold(ws[rc2a1(row, col)])
 
 
-def finalize_sheet(ws):
+def finalize_sheet(ws, nr_rows):
     thin_border = Border(left=Side(style='thin'),
                          right=Side(style='thin'),
                          top=Side(style='thin'),
                          bottom=Side(style='thin'))
-    for row in ws['A1:F100']:
+    for row in ws["A1:F{rc}".format(rc=nr_rows)]:
         for cell in row:
             cell.border = thin_border
+    ws.auto_filter.ref = "A2:F{rc}".format(rc=nr_rows)
 
 
 def rc2a1(row=None, col=None):
@@ -112,11 +138,11 @@ def rc2a1(row=None, col=None):
     This function converts a (row, column) pair (R1C1 notation) to the A1 string notation for excel. The column number
     is converted to the character(s), the row number is appended to the column string.
 
-    :param col: Row number (1 .. )
+    :param row: Row number (1 .. )
 
-    :param row: Column number (1 .. )
+    :param col: Column number (1 .. )
 
-    :return: A1 Notation (e.g. 'BF19745')
+    :return: A1 Notation (column-row) (e.g. 'BF19745')
     """
     return "{0}{1}".format(get_column_letter(col), row)
 

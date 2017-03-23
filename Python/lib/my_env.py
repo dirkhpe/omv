@@ -41,6 +41,20 @@ def get_modulename(scriptname):
     return module
 
 
+def get_config_section(cfg, section):
+    """
+    This method will return all name, value pairs from a section as a dictionary.
+    The configparser.items() method could have been used as well here.
+    :param cfg:
+    :param section:
+    :return: dictionary with all name, value pairs for the section.
+    """
+    section_dict = {}
+    for k in cfg[section]:
+        section_dict[k.strip()] = cfg[section][k].strip()
+    return section_dict
+
+
 def init_loghandler(config, modulename):
     """
     This function initializes the loghandler. Logfilename consists of calling module name + computername.

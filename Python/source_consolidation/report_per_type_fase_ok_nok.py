@@ -96,7 +96,7 @@ if __name__ == "__main__":
                                    pwd=cfg["ConsolidationDB"]["pwd"],
                                    echo=False)
 
-    fn_stats = os.path.join(cfg['Main']['reportdir'], "{fn} Fase.csv".format(fn='Statistieken'))
+    fn_stats = os.path.join(cfg['Main']['reportdir'], "{fn} - Stats.csv".format(fn=my_env.get_modulename(__file__)))
     fh_stats = open(fn_stats, 'w')
     stats_line = "Dossiertype;Fase;Records;Duplicates;OK;Review\n"
     fh_stats.write(stats_line)
