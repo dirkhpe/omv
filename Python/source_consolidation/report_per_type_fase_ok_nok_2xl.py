@@ -153,6 +153,7 @@ if __name__ == "__main__":
                                         decreet = my_env.format_artikels(doc_decreet + stap_decreet + fase_decreet)
                                         besluit = my_env.format_artikels(doc_besluit + stap_besluit + fase_besluit)
                                         for updocument in list_of_tx(ArDocument, ardocument.id, prev_comp=gebeurtenis):
+
                                             """
                                             rl = "{decreet};{besluit};{s};{ardoc};;{gebeurtenis};{updoc}\n" \
                                                   .format(s=arstap.naam, ardoc=ardocument.naam,
