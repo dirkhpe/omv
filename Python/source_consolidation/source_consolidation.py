@@ -41,8 +41,14 @@ if __name__ == "__main__":
     logging.info('Link artefacts to Artikels')
     run_script(fp, 'collect_protege_artikels.py')
 
-    logging.info('Get information from Uitwisselingsplatform (postgres)')
-    run_script(fp, 'collect_postgres.py')
+    # logging.info('Get information from Uitwisselingsplatform (postgres)')
+    # run_script(fp, 'collect_postgres.py')
+
+    logging.info('Get artefacts from OMER DB (Uitwisselingsplatform')
+    run_script(fp, 'collect_omer.py')
+
+    logging.info('Get Dossiertype to Document Combinations from OMER DB')
+    run_script(fp, 'collect_combinations.py')
 
     logging.info('Map information Uitwisselingsplatform and Archief')
     run_script(fp, 'map_up_ar.py')

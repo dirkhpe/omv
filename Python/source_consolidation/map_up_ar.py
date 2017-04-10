@@ -63,12 +63,7 @@ def handle_gebeurtenis(worksheet):
             stap_id = stappen[stap]
         # Get Gebeurtenis ID
         gebeurtenis = cons_sess.query(UpGebeurtenis).filter_by(code=gebeurtenis_code).one()
-        gebeurtenis_id = gebeurtenis.id
-        gebeurtenis2stap = UpGebeurtenis2UpStap(
-            upgebeurtenis_id=gebeurtenis_id,
-            upstap_id=stap_id
-        )
-        cons_sess.add(gebeurtenis2stap)
+        gebeurtenis.upstap_id = stap_id
     cons_sess.flush()
     return
 
@@ -201,7 +196,7 @@ def handle_documenten(worksheet):
                 ardocument = cons_sess.query(ArDocument).filter_by(protege_id=protege_id).one()
                 documenten[protege_id] = ardocument.id
                 ardocument_id = documenten[protege_id]
-            updocument = cons_sess.query(UpDocument).filter_by(code=code).one()
+            updocument = cons_sess.query(UpDocument).filter_by(code=code).filter_by(source='dossierstuk').one()
             updocument_id = updocument.id
             ardocument2updocument = ArDocument2UpDocument(
                 ardocument_id=ardocument_id,

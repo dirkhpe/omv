@@ -2,7 +2,7 @@
 
 import logging
 import pymysql
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, create_engine
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, create_engine, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -179,6 +179,7 @@ class UpType(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False, unique=True)
     naam = Column(String(256), nullable=False)
+    omercombi = relationship("OmerCombi", back_populates="uptype")
     arcomps = relationship("ArType",
                            secondary="artype2uptype",
                            back_populates="upcomps")
@@ -189,6 +190,7 @@ class UpFase(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False, unique=True)
     naam = Column(String(256), nullable=False)
+    omercombi = relationship("OmerCombi", back_populates="upfase")
     arcomps = relationship("ArFase",
                            secondary="arfase2upfase",
                            back_populates="upcomps")
@@ -199,9 +201,9 @@ class UpGebeurtenis(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False, unique=True)
     naam = Column(String(256), nullable=False)
-    upstap = relationship("UpStap",
-                          secondary="upgebeurtenis2upstap",
-                          back_populates="gebeurtenissen")
+    upstap_id = Column(Integer, ForeignKey('upstappen.id'))
+    upstap = relationship("UpStap", back_populates="upgebeurtenis")
+    omercombi = relationship("OmerCombi", back_populates="upgebeurtenis")
 
 
 class UpStap(Base):
@@ -209,19 +211,20 @@ class UpStap(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(256))
     naam = Column(String(256), nullable=False)
+    upgebeurtenis = relationship("UpGebeurtenis", back_populates="upstap")
     arcomps = relationship("ArStap",
                            secondary="arstap2upstap",
                            back_populates="upcomps")
-    gebeurtenissen = relationship("UpGebeurtenis",
-                                  secondary="upgebeurtenis2upstap",
-                                  back_populates="upstap")
 
 
 class UpDocument(Base):
     __tablename__ = "updocumenten"
     id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False)
-    naam = Column(String(256), nullable=False)
+    naam = Column(String(256))
+    source = Column(String(256))
+    __table_args__ = (UniqueConstraint('code', 'source'),)
+    omercombi = relationship("OmerCombi", back_populates="updocument")
     arcomps = relationship("ArDocument",
                            secondary="ardocument2updocument",
                            back_populates="upcomps")
@@ -251,10 +254,19 @@ class ArDocument2UpDocument(Base):
     updocument_id = Column(Integer, ForeignKey('updocumenten.id'), primary_key=True)
 
 
-class UpGebeurtenis2UpStap(Base):
-    __tablename__ = "upgebeurtenis2upstap"
-    upgebeurtenis_id = Column(Integer, ForeignKey('upgebeurtenissen.id'), primary_key=True)
-    upstap_id = Column(Integer, ForeignKey('upstappen.id'), primary_key=True)
+class OmerCombi(Base):
+    # Class to remember the valid combinations that are available in OMER.
+    __tablename__ = "omercombi"
+    id = Column(Integer, primary_key=True)
+    uptype_id = Column(Integer, ForeignKey('uptypes.id'), nullable=False)
+    upfase_id = Column(Integer, ForeignKey('upfases.id'), nullable=False)
+    upgebeurtenis_id = Column(Integer, ForeignKey('upgebeurtenissen.id'), nullable=False)
+    updocument_id = Column(Integer, ForeignKey('updocumenten.id'), nullable=False)
+    __table_args__ = (UniqueConstraint('uptype_id', 'upfase_id', 'upgebeurtenis_id', 'updocument_id'),)
+    uptype = relationship("UpType", back_populates="omercombi")
+    upfase = relationship("UpFase", back_populates="omercombi")
+    upgebeurtenis = relationship("UpGebeurtenis", back_populates="omercombi")
+    updocument = relationship("UpDocument", back_populates="omercombi")
 
 
 class DirectConn:
@@ -301,7 +313,7 @@ def init_session(db, user, pwd, echo=False):
 
     :return: session object.
     """
-    conn_string = "mysql+pymysql://{u}:{p}@localhost/{db}".format(db=db, u=user, p=pwd)
+    conn_string = "mysql+pymysql://{u}:{p}@localhost/{db}?charset=utf8&use_unicode=0".format(db=db, u=user, p=pwd)
     engine = set_engine(conn_string, echo)
     session = set_session4engine(engine)
     return session
