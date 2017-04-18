@@ -70,19 +70,20 @@ class Datastore:
         :return:
         """
         query = """
-            SELECT distinct td.dosinh_code as uptype_code, td.dosinh_naamlang, thv.xhv_naam,
-                            tds.stuk_naam, tds.stuk_code as updocument_code
-            FROM (((( tp_dossierinhouddef AS td)
-            INNER JOIN tabxx_dos_hanvwp AS tdh ON tdh.xdhv_fk_dosinh_id = td.dosinh_id)
-            INNER JOIN tabx_han_vwp AS thv ON thv.xhv_key = tdh.xdhv_fk_xhv)
-            INNER JOIN tabx_stuk_all AS tsa ON tsa.xdsta_fk_hanvwp = thv.xhv_key)
-            INNER JOIN tabdossierstuk AS tds ON tsa.xdsta_fk_stuk = tds.stuk_key
+        SELECT distinct td.dosinh_code as uptype_code, td.dosinh_naamlang as uptype_naam, thv.xhv_naam,
+                        tds.stuk_naam as updocument_naam, tds.stuk_code as updocument_code
+        FROM (((( tp_dossierinhouddef AS td)
+        INNER JOIN tabxx_dos_hanvwp AS tdh ON tdh.xdhv_fk_dosinh_id = td.dosinh_id)
+        INNER JOIN tabx_han_vwp AS thv ON thv.xhv_key = tdh.xdhv_fk_xhv)
+        INNER JOIN tabx_stuk_all AS tsa ON tsa.xdsta_fk_hanvwp = thv.xhv_key)
+        INNER JOIN tabdossierstuk AS tds ON tsa.xdsta_fk_stuk = tds.stuk_key
         """
         return self.res_query(query, 'samenstellen_han_vwp')
 
     def samenstellen_han_vwp_functie(self):
         query = """
-        SELECT distinct td.dosinh_code as uptype_code, tdb.blok_blokid as updocument_code
+        SELECT distinct td.dosinh_code as uptype_code, td.dosinh_naamlang as uptype_naam,
+        tdb.blok_blokid as updocument_code, tdb.blok_naam as updocument_naam
         FROM ((((( tp_dossierinhouddef AS td)
         INNER JOIN tabxx_dos_hanvwp AS tdh ON tdh.xdhv_fk_dosinh_id = td.dosinh_id)
         INNER JOIN tabx_han_vwp AS thv ON thv.xhv_key = tdh.xdhv_fk_xhv)
@@ -94,7 +95,8 @@ class Datastore:
 
     def samenstellen_vast(self):
         query = """
-        SELECT distinct pt.proj_code as uptype_code, ds.stuk_code as updocument_code
+        SELECT distinct pt.proj_code as uptype_code, pt.proj_naamlang as uptype_naam,
+               ds.stuk_code as updocument_code, ds.stuk_naam as updocument_naam
         FROM ((tp_projecttype AS pt)
         INNER JOIN tpx_proj_stuk AS ps ON ps.xprst_fk_proj_id = pt.proj_id)
         INNER JOIN tabdossierstuk AS ds ON ds.stuk_key = ps.xprst_fk_stuk_key
@@ -102,8 +104,14 @@ class Datastore:
         return self.res_query(query, 'samenstellen_vast')
 
     def samenstellen_milieu(self):
+        """
+        De query via DossierInhoudDef naar DossierType geeft teveel Dossierstukken terug. Gebruik NIET deze query, maar
+        gebruik query samenstellen_milieu_projecttype ipv deze query.
+        :return:
+        """
         query = """
-        SELECT distinct did.dosinh_code as uptype_code, ds.stuk_code as updocument_code
+        SELECT distinct did.dosinh_code as uptype_code, did.dosinh_naamlang as uptype_naam,
+               ds.stuk_code as updocument_code, ds.stuk_naam as updocument_naam
         FROM ((((((((tp_dossierinhouddef AS did)
         INNER JOIN oglx_doss_vwp_dond AS dvd ON did.dosinh_id=dvd.xdvd_fk_dosinh_id)
         INNER JOIN ogl_dossieronderdeeltype AS dot ON dvd.xdvd_dond_id=dot.dond_id)
@@ -118,10 +126,32 @@ class Datastore:
         """
         return self.res_query(query, 'samenstellen_vast')
 
-    def proces_docs(self):
+    def samenstellen_milieu_projecttype(self):
+        """
+        Zie beschrijving bij functie samenstellen_milieu.
+        :return:
+        """
         query = """
-        SELECT distinct did.dosinh_code as uptype_code,
-               df.dosf_code as upfase_code, g.geb_code as upgebeurtenis_code,
+        SELECT distinct pt.proj_code as uptype_code, pt.proj_naamlang as uptype_naam,
+               ds.stuk_code as updocument_code, ds.stuk_naam as updocument_naam
+        FROM ((((tp_projecttype pt)
+        INNER JOIN tpx_formdeel_projtype AS fpt ON fpt.xfdpt_fk_proj_id=pt.proj_id)
+        INNER JOIN ogl_formulieronderdeeltype AS fot ON fot.fond_id = fpt.xfdpt_fk_fond_id)
+        INNER JOIN ogl_formdeel_stuk AS fs ON fs.fons_fond_id = fot.fond_id)
+        INNER JOIN tabdossierstuk AS ds ON ds.stuk_key = fs.fons_stuk_id;
+        """
+        return self.res_query(query, 'samenstellen_milieu_projecttype')
+
+    def proces_docs(self):
+        """
+        Bereken documenten voor processing. Start van DossierStatus. Echter Dossierstatus wordt nog amper gebruikt.
+        Gebruik NIET deze query, wel de query van functie proces_type_docs.
+        :return:
+        """
+        query = """
+        SELECT distinct did.dosinh_code as uptype_code, did.dosinh_naamlang as uptype_naam,
+               df.dosf_code as upfase_code, df.dosf_naamlang,
+               g.geb_code as upgebeurtenis_code,
                ds.stuk_code as updocument_code,
                b.blok_blokid as datablok_code
         FROM (((((((((((tabdossierfase df)
@@ -139,3 +169,32 @@ class Datastore:
         WHERE NOT ((b.blok_code is null) AND (ds.stuk_code is null));
         """
         return self.res_query(query, 'proces_docs')
+
+    def proces_type_docs(self):
+        """
+        Bereken documenten voor processing. Start van Project type ipv Dossierstatus.
+        :return:
+        """
+        query = """
+        SELECT distinct pt.proj_code as uptype_code, pt.proj_naamlang as uptype_naam,
+               df.dosf_code as upfase_code, df.dosf_naam as upfase_naam,
+               g.geb_code as upgebeurtenis_code, g.geb_naam as upgebeurtenis_naam,
+               ds.stuk_code as updocument_code, ds.stuk_naam as updocument_naam,
+               b.blok_blokid as datablok_code, b.blok_naam as datablok_naam
+        FROM (((((((((((((tp_projecttype pt)
+        LEFT JOIN tp_projectfase AS pf ON pf.prof_fk_proj_id = pt.proj_id)
+        LEFT JOIN tabfase AS f ON f.fase_id = pf.prof_fk_fase_id)
+        LEFT JOIN tp_dossiertype AS dt ON dt.dost_fk_projfase_id = pf.prof_id)
+        LEFT JOIN tp_procesdef AS pd ON pd.proc_id = dt.dost_fk_proc_id)
+        LEFT JOIN tabdossierfase AS df ON df.dosf_fk_proc_id = pd.proc_id)
+        LEFT JOIN tabdossierstatus AS dstat ON dstat.stat_fk_dosf = df.dosf_key)
+        LEFT JOIN tabx_stat_gebuse AS sgu on dstat.stat_key = sgu.xsgu_fk_stat)
+        LEFT JOIN tabxx_gebuse AS gu on sgu.xsgu_fk_gebuse = gu.gebu_key)
+        LEFT JOIN tabgebeurtenis AS g on gu.gebu_fk_gebeurt = g.geb_key)
+        LEFT JOIN tabx_stuk_all AS sa on g.geb_key = sa.xdsta_fk_gebeurt)
+        LEFT JOIN tabdossierstuk AS ds on sa.xdsta_fk_stuk = ds.stuk_key)
+        LEFT JOIN tabx_geb_blk AS gb on g.geb_key = gb.xgb_fk_gebeurt)
+        LEFT JOIN tabdatablok AS b on gb.xgb_fk_blok = b.blok_key
+        WHERE NOT ((b.blok_code is null) AND (ds.stuk_code is null));
+        """
+        return self.res_query(query, 'proces_type_docs')

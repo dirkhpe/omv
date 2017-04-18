@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     # Get Samenstellen Dossier - Milieuvergunning (Yellow Path)
     logging.info("Samenstellen Dossier - Milieuvergunning")
-    recs = omdb.samenstellen_milieu()
+    recs = omdb.samenstellen_milieu_projecttype()
     for rec in recs:
         (uptype_id,) = cons_sess.query(UpType.id).filter_by(code=rec.uptype_code).one()
         query = cons_sess.query(UpDocument.id).filter_by(code=rec.updocument_code)
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     # Get Proces Dossier (Orange Path)
     logging.info("Proces Dossiers")
-    recs = omdb.proces_docs()
+    recs = omdb.proces_type_docs()
     for rec in recs:
         (uptype_id,) = cons_sess.query(UpType.id).filter_by(code=rec.uptype_code).one()
         (upfase_id,) = cons_sess.query(UpFase.id).filter_by(code=rec.upfase_code).one()

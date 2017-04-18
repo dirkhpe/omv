@@ -34,9 +34,18 @@ if __name__ == "__main__":
     # Get Fase from Uitwisselingsplatform: tp_fase:
     recs = omdb.get_table('tabfase')
     for rec in recs:
+        # Add weights
+        weight = 25 # Default for 'Eerste Aanleg'
+        if 'SAMENSTELLEN' in rec.fase_code:
+            weight = 10
+        elif 'LAATSTE' in rec.fase_code:
+            weight = 50
+        elif 'UITVOERING' in rec.fase_code:
+            weight = 100
         upfase = UpFase(
             code=rec.fase_code,
-            naam=rec.fase_naamkort
+            naam=rec.fase_naamkort,
+            weight=weight
         )
         cons_sess.add(upfase)
     # Get Gebeurtenis from Uitwisselingsplatform: tp_gebeurtenis:
@@ -60,9 +69,14 @@ if __name__ == "__main__":
     recs = omdb.get_table('tabdatablok')
     for rec in recs:
         # logging.info('Working on record ID {rid}'.format(rid=rec.blok_key))
+        # Make sure Blok naam is always available.
+        if rec.blok_naam:
+            blok_naam = rec.blok_naam
+        else:
+            blok_naam = "(geen naam) {bc}".format(bc=rec.blok_blokid)
         updocumenten = UpDocument(
             code=rec.blok_blokid,
-            naam=rec.blok_naam,
+            naam=blok_naam,
             source='datablok'
         )
         cons_sess.add(updocumenten)

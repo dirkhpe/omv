@@ -190,6 +190,7 @@ class UpFase(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(256), nullable=False, unique=True)
     naam = Column(String(256), nullable=False)
+    weight = Column(Integer, nullable=False, default=25)
     omercombi = relationship("OmerCombi", back_populates="upfase")
     arcomps = relationship("ArFase",
                            secondary="arfase2upfase",
@@ -276,28 +277,55 @@ class DirectConn:
     Finally all tables will be created using SQLAlchemy library
     """
 
-    def __init__(self, db, user, pwd):
+    def __init__(self, user, pwd):
+        """
+        The init procedure will set-up Connection to the Database Server, but not to a specific database.
+        :param db:
+        :param user:
+        :param pwd:
+        """
         mysql_conn = dict(
             host="localhost",
             port=3306,
             user=user,
-            passwd=pwd,
-            db='information_schema'
+            passwd=pwd
         )
-        conn = pymysql.connect(**mysql_conn)
-        cur = conn.cursor()
-        query = "DROP DATABASE {db}".format(db=db)
+        self.user = user
+        self.pwd = pwd
+        self.conn = pymysql.connect(**mysql_conn)
+        self.cur = self.conn.cursor()
+
+    def close(self):
+        self.conn.close()
+
+    def rebuild(self, db):
+        """
+        This function will drop and recreate the database. Then it will call SQLAlchemy to recreate the tables.
+        :return:
+        """
+        query = "DROP DATABASE IF EXISTS {db}".format(db=db)
         logging.info(query)
-        cur.execute(query)
+        self.cur.execute(query)
         query = "CREATE DATABASE {db}".format(db=db)
         logging.info(query)
-        cur.execute(query)
-        conn.close()
+        self.cur.execute(query)
         # Now use sqlalchemy connection to build database
-        conn_string = "mysql+pymysql://{u}:{p}@localhost/{db}".format(db=db, u=user, p=pwd)
+        conn_string = "mysql+pymysql://{u}:{p}@localhost/{db}".format(db=db, u=self.user, p=self.pwd)
         engine = set_engine(conn_string)
         Base.metadata.create_all(engine)
 
+    def truncate_table(self, db, table):
+        """
+        This function will truncate a table.
+        :param db:
+        :param table:
+        :return:
+        """
+        query = "USE {db}".format(db=db)
+        self.cur.execute(query)
+        query = "TRUNCATE TABLE {t}".format(t=table)
+        self.cur.execute(query)
+        return
 
 def init_session(db, user, pwd, echo=False):
     """

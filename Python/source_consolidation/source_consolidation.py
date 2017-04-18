@@ -25,7 +25,9 @@ if __name__ == "__main__":
     user = cfg['ConsolidationDB']['user']
     pwd = cfg['ConsolidationDB']['pwd']
     logging.info("Drop and recreate database {db}.".format(db=db))
-    mysqlstore.DirectConn(db=db, user=user, pwd=pwd)
+    dbconn = mysqlstore.DirectConn(user=user, pwd=pwd)
+    dbconn.rebuild(db)
+    dbconn.close()
 
     tocs = ['Uitvoeringsbesluit', 'Decreet']
     for toc in tocs:
