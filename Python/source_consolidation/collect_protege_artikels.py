@@ -10,7 +10,7 @@ import sys
 (pp, cd) = os.path.split(os.getcwd())
 sys.path.append(pp)
 
-import logging
+# import logging
 from lib import my_env
 from lib import sqlite_al as sqlite
 from lib.sqlite_al import Component, Relation
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     for rel in pt_sess.query(Relation).filter_by(rel_type='beschreven_in'):
         # Ignore components of category 'Gebeurtenis'.
         if rel.source_comp.category != 'Gebeurtenis':
-            obj_class = comp_cat[rel.source.encode(encoding='UTF-8')]
+            obj_class = comp_cat[rel.source]
             obj_inst = obj_class(
                 protege_id=rel.source,
                 artikel_id=protege_ids[rel.target]

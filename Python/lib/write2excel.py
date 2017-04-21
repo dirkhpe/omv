@@ -2,6 +2,7 @@
 This module implements a class to create Excel Workbooks.
 """
 
+import logging
 from copy import copy
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Alignment
@@ -77,39 +78,13 @@ class Write2Excel:
     def write_line(self, content):
 
         if 'Laatste Aanleg' in content['arfase']:
-            bg_color = 'FFC000' # Orange
+            bg_color = 'FFC000'     # Orange
         elif ('Samenstellen' in content['arfase']) or ('Dossier' in content['arstap']):
             # Fase: Eerste Aanleg - Stap: Samenstellen of Indienen Dossier.
-            bg_color = 'FFFF00' # Yellow
+            bg_color = 'FFFF00'     # Yellow
         else:
             # Fase: Eerste Aanleg - Behandeling
-            bg_color = '92D050' # Green
-
-        fill_cell = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
-        self.rowcnt += 1
-        self.current_sheet[rc2a1(self.rowcnt, 1)] = content['decreet']
-        self.current_sheet[rc2a1(self.rowcnt, 2)] = content['besluit']
-        self.current_sheet[rc2a1(self.rowcnt, 3)] = content['arstap']
-        self.current_sheet[rc2a1(self.rowcnt, 4)] = content['ardoc']
-        self.current_sheet[rc2a1(self.rowcnt, 5)] = content['updoc']
-        self.current_sheet[rc2a1(self.rowcnt, 6)] = content['gebeurtenis']
-        for cnt in range(1,7):
-            self.current_sheet[rc2a1(self.rowcnt, cnt)].fill = fill_cell
-        return
-
-
-    def write_line4omer(self, content):
-        if 'Laatste Aanleg' in content['upfase']:
-            bg_color = 'FFC000'  # Orange
-        elif ('Samenstellen' in content['upfase']) or ('Indienen' in content['upfase']):
-            # Fase: Eerste Aanleg - Stap: Samenstellen of Indienen Dossier.
-            bg_color = 'FFFF00'  # Yellow
-        elif 'Uitvoeren' in content['upfase']:
-            # Fase: Uitvoeren
-            bg_color = '00B0F0'  # Blue
-        else:
-            # Fase: Eerste Aanleg - Behandeling
-            bg_color = '92D050'  # Green
+            bg_color = '92D050'     # Green
 
         fill_cell = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
         self.rowcnt += 1
@@ -123,6 +98,33 @@ class Write2Excel:
             self.current_sheet[rc2a1(self.rowcnt, cnt)].fill = fill_cell
         return
 
+    def write_line4omer(self, content):
+        if 'laatste aanleg' in content['upfase']:
+            bg_color = 'FFC000'  # Orange
+        elif 'Samenstellen' in content['upfase']:
+            # Fase: Eerste Aanleg - Stap: Samenstellen of Indienen Dossier.
+            bg_color = 'FFFF00'  # Yellow
+        elif 'Uitvoeren' in content['upfase']:
+            # Fase: Uitvoeren
+            bg_color = '00B0F0'  # Blue
+        elif 'eerste aanleg' in content['upfase']:
+            bg_color = '92D050'  # Green
+        else:
+            logging.error("Unexpected UpFase {uf}, no colouring...".format(uf=content['upfase']))
+            # Fase: Eerste Aanleg - Behandeling
+            bg_color = 'FF0000'  # Green
+
+        fill_cell = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
+        self.rowcnt += 1
+        self.current_sheet[rc2a1(self.rowcnt, 1)] = content['decreet']
+        self.current_sheet[rc2a1(self.rowcnt, 2)] = content['besluit']
+        self.current_sheet[rc2a1(self.rowcnt, 3)] = content['arstap']
+        self.current_sheet[rc2a1(self.rowcnt, 4)] = content['ardoc']
+        self.current_sheet[rc2a1(self.rowcnt, 5)] = content['updoc']
+        self.current_sheet[rc2a1(self.rowcnt, 6)] = content['gebeurtenis']
+        for cnt in range(1, 7):
+            self.current_sheet[rc2a1(self.rowcnt, cnt)].fill = fill_cell
+        return
 
     def write_line_report_combis(self, content):
         """
@@ -270,6 +272,7 @@ def finalize_sheet(ws, nr_rows):
         for cell in row:
             cell.border = thin_border
     ws.auto_filter.ref = "A2:F{rc}".format(rc=nr_rows)
+    ws.freeze_panes = ws['A3']
 
 
 def finalize_sheet_cons(ws, nr_rows):
@@ -281,6 +284,7 @@ def finalize_sheet_cons(ws, nr_rows):
         for cell in row:
             cell.border = thin_border
     ws.auto_filter.ref = "A2:J{rc}".format(rc=nr_rows)
+    ws.freeze_panes = ws['A3']
 
 
 def rc2a1(row=None, col=None):

@@ -13,6 +13,7 @@ from lib import my_env
 from lib import mysqlstore as mysql
 from lib.mysqlstore import *
 from openpyxl import load_workbook
+from sqlalchemy.orm.exc import NoResultFound
 
 
 def get_named_row(nr_name, col_hrd):
@@ -196,7 +197,12 @@ def handle_documenten(worksheet):
                 ardocument = cons_sess.query(ArDocument).filter_by(protege_id=protege_id).one()
                 documenten[protege_id] = ardocument.id
                 ardocument_id = documenten[protege_id]
-            updocument = cons_sess.query(UpDocument).filter_by(code=code).filter_by(source='dossierstuk').one()
+            try:
+                source='dossierstuk'
+                updocument = cons_sess.query(UpDocument).filter_by(code=code).filter_by(source=source).one()
+            except NoResultFound:
+                source='datablok'
+                updocument = cons_sess.query(UpDocument).filter_by(code=code).filter_by(source=source).one()
             updocument_id = updocument.id
             ardocument2updocument = ArDocument2UpDocument(
                 ardocument_id=ardocument_id,

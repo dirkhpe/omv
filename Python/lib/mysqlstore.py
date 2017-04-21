@@ -205,6 +205,9 @@ class UpGebeurtenis(Base):
     upstap_id = Column(Integer, ForeignKey('upstappen.id'))
     upstap = relationship("UpStap", back_populates="upgebeurtenis")
     omercombi = relationship("OmerCombi", back_populates="upgebeurtenis")
+    arcomps = relationship("UpDocument",
+                           secondary="updocument2gebeurtenis",
+                           back_populates="upcomps")
 
 
 class UpStap(Base):
@@ -229,6 +232,15 @@ class UpDocument(Base):
     arcomps = relationship("ArDocument",
                            secondary="ardocument2updocument",
                            back_populates="upcomps")
+    upcomps = relationship("UpGebeurtenis",
+                           secondary="updocument2gebeurtenis",
+                           back_populates="arcomps")
+
+
+class UpDocument2Gebeurtenis(Base):
+    __tablename__ = "updocument2gebeurtenis"
+    updocument_id = Column(Integer, ForeignKey('updocumenten.id'), primary_key=True)
+    upgebeurtenis_id = Column(Integer, ForeignKey('upgebeurtenissen.id'), primary_key=True)
 
 
 class ArType2UpType(Base):
@@ -263,6 +275,7 @@ class OmerCombi(Base):
     upfase_id = Column(Integer, ForeignKey('upfases.id'), nullable=False)
     upgebeurtenis_id = Column(Integer, ForeignKey('upgebeurtenissen.id'), nullable=False)
     updocument_id = Column(Integer, ForeignKey('updocumenten.id'), nullable=False)
+    bron = Column(String(256))
     __table_args__ = (UniqueConstraint('uptype_id', 'upfase_id', 'upgebeurtenis_id', 'updocument_id'),)
     uptype = relationship("UpType", back_populates="omercombi")
     upfase = relationship("UpFase", back_populates="omercombi")
@@ -280,7 +293,6 @@ class DirectConn:
     def __init__(self, user, pwd):
         """
         The init procedure will set-up Connection to the Database Server, but not to a specific database.
-        :param db:
         :param user:
         :param pwd:
         """
@@ -327,6 +339,7 @@ class DirectConn:
         self.cur.execute(query)
         return
 
+
 def init_session(db, user, pwd, echo=False):
     """
     This function configures the connection to the database and returns the session object.
@@ -341,7 +354,8 @@ def init_session(db, user, pwd, echo=False):
 
     :return: session object.
     """
-    conn_string = "mysql+pymysql://{u}:{p}@localhost/{db}?charset=utf8&use_unicode=0".format(db=db, u=user, p=pwd)
+    # conn_string = "mysql+pymysql://{u}:{p}@localhost/{db}?charset=utf8&use_unicode=0".format(db=db, u=user, p=pwd)
+    conn_string = "mysql+pymysql://{u}:{p}@localhost/{db}?charset=utf8".format(db=db, u=user, p=pwd)
     engine = set_engine(conn_string, echo)
     session = set_session4engine(engine)
     return session

@@ -33,10 +33,33 @@ if __name__ == "__main__":
                                    user=cfg["ConsolidationDB"]["user"],
                                    pwd=cfg["ConsolidationDB"]["pwd"])
 
-    # Get Samenstellen Dossier - Handeling-Voorwerp (Green Path)
-    logging.info("Samenstellen Dossier - Handeling - Voorwerp")
     (upfase_id,) = cons_sess.query(UpFase.id).filter_by(code='AANVRAAG_SAMENSTELLEN').one()
     (upgebeurtenis_id,) = cons_sess.query(UpGebeurtenis.id).filter_by(code='STARTEN_NIEUW_DOSSIER').one()
+    tot_recs = 0
+
+    # Get Samenstellen Dossier - Vaste Documenten (Lila Path)
+    logging.info("Samenstellen Dossier - Vaste documenten")
+    bron = 'Vast'
+    recs = omdb.samenstellen_vast()
+    for rec in recs:
+        (uptype_id,) = cons_sess.query(UpType.id).filter_by(code=rec.uptype_code).one()
+        query = cons_sess.query(UpDocument.id).filter_by(code=rec.updocument_code)
+        (updocument_id,) = query.filter_by(source='dossierstuk').one()
+        combi_dict = dict(
+            uptype_id=uptype_id,
+            upfase_id=upfase_id,
+            upgebeurtenis_id=upgebeurtenis_id,
+            updocument_id=updocument_id
+        )
+        if not cons_sess.query(OmerCombi).filter_by(**combi_dict).first():
+            combi_dict['bron'] = bron
+            cons_sess.add(OmerCombi(**combi_dict))
+    cons_sess.commit()
+    tot_recs = count_recs_added(cons_sess, tot_recs)
+
+    # Get Samenstellen Dossier - Handeling-Voorwerp (Green Path)
+    logging.info("Samenstellen Dossier - Handeling - Voorwerp")
+    bron = 'HanVwp'
     recs = omdb.samenstellen_han_vwp()
     for rec in recs:
         (uptype_id,) = cons_sess.query(UpType.id).filter_by(code=rec.uptype_code).one()
@@ -49,12 +72,14 @@ if __name__ == "__main__":
             updocument_id=updocument_id
         )
         if not cons_sess.query(OmerCombi).filter_by(**combi_dict).first():
+            combi_dict['bron'] = bron
             cons_sess.add(OmerCombi(**combi_dict))
     cons_sess.commit()
-    tot_recs = count_recs_added(cons_sess, 0)
+    tot_recs = count_recs_added(cons_sess, tot_recs)
 
     # Get Samenstellen Dossier - Functie (Blue Path)
     logging.info("Samenstellen Dossier - Handeling - Voorwerp - Functie")
+    bron = 'HanVwpFun'
     recs = omdb.samenstellen_han_vwp_functie()
     for rec in recs:
         (uptype_id,) = cons_sess.query(UpType.id).filter_by(code=rec.uptype_code).one()
@@ -71,30 +96,14 @@ if __name__ == "__main__":
                 updocument_id=updocument_id
             )
             if not cons_sess.query(OmerCombi).filter_by(**combi_dict).first():
+                combi_dict['bron'] = bron
                 cons_sess.add(OmerCombi(**combi_dict))
-    cons_sess.commit()
-    tot_recs = count_recs_added(cons_sess, tot_recs)
-
-    # Get Samenstellen Dossier - Vaste Documenten (Lila Path)
-    logging.info("Samenstellen Dossier - Vaste documenten")
-    recs = omdb.samenstellen_vast()
-    for rec in recs:
-        (uptype_id,) = cons_sess.query(UpType.id).filter_by(code=rec.uptype_code).one()
-        query = cons_sess.query(UpDocument.id).filter_by(code=rec.updocument_code)
-        (updocument_id,) = query.filter_by(source='dossierstuk').one()
-        combi_dict = dict(
-            uptype_id=uptype_id,
-            upfase_id=upfase_id,
-            upgebeurtenis_id=upgebeurtenis_id,
-            updocument_id=updocument_id
-        )
-        if not cons_sess.query(OmerCombi).filter_by(**combi_dict).first():
-            cons_sess.add(OmerCombi(**combi_dict))
     cons_sess.commit()
     tot_recs = count_recs_added(cons_sess, tot_recs)
 
     # Get Samenstellen Dossier - Milieuvergunning (Yellow Path)
     logging.info("Samenstellen Dossier - Milieuvergunning")
+    bron = 'Milieu'
     recs = omdb.samenstellen_milieu_projecttype()
     for rec in recs:
         (uptype_id,) = cons_sess.query(UpType.id).filter_by(code=rec.uptype_code).one()
@@ -107,23 +116,21 @@ if __name__ == "__main__":
             updocument_id=updocument_id
         )
         if not cons_sess.query(OmerCombi).filter_by(**combi_dict).first():
+            combi_dict['bron'] = bron
             cons_sess.add(OmerCombi(**combi_dict))
     cons_sess.commit()
     tot_recs = count_recs_added(cons_sess, tot_recs)
 
     # Get Proces Dossier (Orange Path)
     logging.info("Proces Dossiers")
+    bron = 'Behandelen'
     recs = omdb.proces_type_docs()
     for rec in recs:
         (uptype_id,) = cons_sess.query(UpType.id).filter_by(code=rec.uptype_code).one()
         (upfase_id,) = cons_sess.query(UpFase.id).filter_by(code=rec.upfase_code).one()
         (upgebeurtenis_id,) = cons_sess.query(UpGebeurtenis.id).filter_by(code=rec.upgebeurtenis_code).one()
-        if rec.updocument_code:
-            query = cons_sess.query(UpDocument.id).filter_by(code=rec.updocument_code)
-            (updocument_id,) = query.filter_by(source='dossierstuk').one()
-        else:
-            query = cons_sess.query(UpDocument.id).filter_by(code=rec.datablok_code)
-            (updocument_id,) = query.filter_by(source='datablok').one()
+        query = cons_sess.query(UpDocument.id).filter_by(code=rec.updocument_code)
+        (updocument_id,) = query.filter_by(source=rec.doc_type).one()
         combi_dict = dict(
             uptype_id=uptype_id,
             upfase_id=upfase_id,
@@ -131,8 +138,14 @@ if __name__ == "__main__":
             updocument_id=updocument_id
         )
         if not cons_sess.query(OmerCombi).filter_by(**combi_dict).first():
+            combi_dict['bron'] = bron
             cons_sess.add(OmerCombi(**combi_dict))
     cons_sess.commit()
     tot_recs = count_recs_added(cons_sess, tot_recs)
+
+    # Populate table updocument2gebeurtenis with a direct SQL
+    query = "insert into updocument2gebeurtenis SELECT distinct updocument_id, upgebeurtenis_id FROM omercombi"
+    cons_sess.execute(query)
+    cons_sess.commit()
 
     logging.info('End Application')

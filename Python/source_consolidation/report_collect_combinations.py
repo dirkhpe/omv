@@ -11,6 +11,7 @@ import sys
 sys.path.append(pp)
 
 # import logging
+from datetime import datetime as dt
 from lib import my_env
 from lib import omer
 from lib import mysqlstore as mysql
@@ -19,6 +20,7 @@ from lib.mysqlstore import *
 
 
 if __name__ == "__main__":
+    now = dt.now().strftime("%Y%m%d%H%M%S")
     cfg = my_env.init_env("convert_protege", __file__)
     # Get connection to the Postgres database
     omdb = omer.Datastore(cfg)
@@ -27,8 +29,10 @@ if __name__ == "__main__":
                                    user=cfg["ConsolidationDB"]["user"],
                                    pwd=cfg["ConsolidationDB"]["pwd"])
 
-    fn_stats = os.path.join(cfg['Main']['reportdir'], "{fn} - Stats.csv".format(fn=my_env.get_modulename(__file__)))
-    fn_ok = os.path.join(cfg['Main']['reportdir'], "Consolidatie DossierType Document.xlsx")
+    fn_stats = os.path.join(cfg['Main']['reportdir'],
+                            "{fn} - Stats {now}.csv".format(fn=my_env.get_modulename(__file__), now=now))
+    fn_ok = os.path.join(cfg['Main']['reportdir'],
+                         "Consolidatie DossierType Document {now}.xlsx".format(now=now))
     for fn in [fn_stats, fn_ok]:
         try:
             if os.path.isfile(fn):
@@ -86,7 +90,7 @@ if __name__ == "__main__":
 
     # Get Samenstellen Dossier - Vaste Documenten (Lila Path)
     logging.info("Vast")
-    bron = 'Samenstellen - Vast'
+    bron = 'Vast'
     d_type = 'dossierstuk'
     recs = omdb.samenstellen_vast()
     for rec in recs:
@@ -131,14 +135,6 @@ if __name__ == "__main__":
     bron = 'Behandelen'
     recs = omdb.proces_type_docs()
     for rec in recs:
-        if rec.updocument_code:
-            d_type = 'dossierstuk'
-            updocument_code = rec.updocument_code
-            updocument_naam = rec.updocument_naam
-        else:
-            d_type = 'datablok'
-            updocument_code = rec.datablok_code
-            updocument_naam = rec.datablok_naam
         combi_dict = dict(
             bron=bron,
             dt_code=rec.uptype_code,
@@ -147,9 +143,9 @@ if __name__ == "__main__":
             f_naam=rec.upfase_naam,
             g_code=rec.upgebeurtenis_code,
             g_naam=rec.upgebeurtenis_naam,
-            d_type=d_type,
-            d_code=updocument_code,
-            d_naam=updocument_naam
+            d_type=rec.doc_type,
+            d_code=rec.updocument_code,
+            d_naam=rec.updocument_naam
         )
         ws.write_line_report_combis(combi_dict)
     logging.info("Bron: {b} - {ra} Records toegevoegd".format(b=bron, ra=len(recs)))

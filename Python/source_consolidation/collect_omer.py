@@ -17,20 +17,23 @@ from lib.mysqlstore import *
 
 if __name__ == "__main__":
     cfg = my_env.init_env("convert_protege", __file__)
+
     # Get connection to the Postgres database
     omdb = omer.Datastore(cfg)
     # Get session for Consolidation Database
     cons_sess = mysql.init_session(db=cfg["ConsolidationDB"]["db"],
                                    user=cfg["ConsolidationDB"]["user"],
                                    pwd=cfg["ConsolidationDB"]["pwd"])
+
     # Get Dossiertypes from Uitwisselingsplatform: tp_dossierinhouddefinitie
-    recs = omdb.get_table('tp_dossierinhouddef')
+    recs = omdb.get_table('tp_projecttype')
     for rec in recs:
         uptype = UpType(
-            code=rec.dosinh_code,
-            naam=rec.dosinh_naamkort
+            code=rec.proj_code,
+            naam=rec.proj_naamkort
         )
         cons_sess.add(uptype)
+
     # Get Fase from Uitwisselingsplatform: tp_fase:
     recs = omdb.get_table('tabfase')
     for rec in recs:
@@ -48,6 +51,7 @@ if __name__ == "__main__":
             weight=weight
         )
         cons_sess.add(upfase)
+
     # Get Gebeurtenis from Uitwisselingsplatform: tp_gebeurtenis:
     recs = omdb.get_table('tabgebeurtenis')
     for rec in recs:
@@ -56,6 +60,7 @@ if __name__ == "__main__":
             naam=rec.geb_naam
         )
         cons_sess.add(upgebeurtenis)
+
     # Get Dossierstukken from Uitwisselingsplatform: tp_dossierstuktype
     recs = omdb.get_table('tabdossierstuk')
     for rec in recs:
@@ -65,6 +70,7 @@ if __name__ == "__main__":
             source='dossierstuk'
         )
         cons_sess.add(updocumenten)
+
     # Get Datablokken from Uitwisselingsplatform and add them to Dossierstukken
     recs = omdb.get_table('tabdatablok')
     for rec in recs:
@@ -81,4 +87,5 @@ if __name__ == "__main__":
         )
         cons_sess.add(updocumenten)
     cons_sess.commit()
+
     logging.info('End Application')

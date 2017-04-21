@@ -9,8 +9,8 @@ import sys
 sys.path.append(pp)
 
 # import logging
-import hashlib
 import os
+from datetime import datetime as dt
 from lib import my_env
 from lib import write2excel
 from lib import mysqlstore as mysql
@@ -39,7 +39,7 @@ def list_of_tx2ar(omcomp, comp_id, prev_comp=None):
     if prev_comp != not_translated:
         for arcomps in cons_sess.query(omcomp).filter_by(id=comp_id).filter(omcomp.arcomps.any()):
             for arcomp in arcomps.arcomps:
-                list_tx.append(arcomp.naam.decode('utf8'))
+                list_tx.append(arcomp.naam)
     if len(list_tx) == 0:
         list_tx.append(not_translated)
     return list_tx
@@ -65,6 +65,8 @@ def gebeurtenis2stap(gebeurtenis_id, prev_comp=None):
 
 if __name__ == "__main__":
 
+    now = dt.now().strftime("%Y%m%d%H%M%S")
+
     cfg = my_env.init_env("convert_protege", __file__)
 
     # Get translations for DossierType, less than 32 characters to fit as a tab-title.
@@ -81,9 +83,10 @@ if __name__ == "__main__":
                                    echo=False)
 
     # Set-up files and remove previous version of the file.
-    fn_stats = os.path.join(cfg['Main']['reportdir'], "{fn} - Stats.csv".format(fn=my_env.get_modulename(__file__)))
-    fn_ok = os.path.join(cfg['Main']['reportdir'], "omer_combis.xlsx")
-    fn_nok = os.path.join(cfg['Main']['reportdir'], "omer_combis_check.xlsx")
+    fn_stats = os.path.join(cfg['Main']['reportdir'], "{fn} - Stats {now}.csv"
+                            .format(fn=my_env.get_modulename(__file__), now=now))
+    fn_ok = os.path.join(cfg['Main']['reportdir'], "omer_combis {now}.xlsx".format(now=now))
+    fn_nok = os.path.join(cfg['Main']['reportdir'], "omer_combis_check {now}.xlsx".format(now=now))
     for fn in [fn_stats, fn_ok, fn_nok]:
         try:
             if os.path.isfile(fn):
@@ -102,13 +105,13 @@ if __name__ == "__main__":
     decreet = ''
     besluit = ''
     # First get query based on DossierType
-    for uptype in cons_sess.query(UpType).all():
+    for uptype in cons_sess.query(UpType).order_by(UpType.naam).all():
 
         # Each uptype translates to 0 or 1 artypes.
         artypes = list_of_tx2ar(UpType, uptype.id)
         if artypes[0] == not_translated:
             logging.info("DossierType niet gevonden, werk met {dt}".format(dt=uptype.naam))
-            ws_title = "{id} {n}".format(id=uptype.id, n=uptype.naam.decode('utf8').lower())[:31]
+            ws_title = "{id} {n}".format(id=uptype.id, n=uptype.naam.lower())[:31]
             artype = not_translated
         else:
             artype = artypes[0]
@@ -124,10 +127,10 @@ if __name__ == "__main__":
         report_lines = []
 
         for rec in query:
-            uptype = rec.uptype.naam.decode('utf8')
-            upfase = rec.upfase.naam.decode('utf8')
-            upgebeurtenis = rec.upgebeurtenis.naam.decode('utf8')
-            updocument = rec.updocument.naam.decode('utf8')
+            uptype = rec.uptype.naam
+            upfase = rec.upfase.naam
+            upgebeurtenis = rec.upgebeurtenis.naam
+            updocument = rec.updocument.naam
             for arstap in gebeurtenis2stap(rec.upgebeurtenis.id, upfase):
                 for ardoc in list_of_tx2ar(UpDocument, rec.updocument.id, arstap):
                     rl_dict = dict(upfase=upfase,
@@ -139,7 +142,6 @@ if __name__ == "__main__":
                                    besluit=besluit
                                    )
                     rl = [rl_dict[k].lower() for k in list(rl_dict)]
-                    # rl = "*".join(rl_arr).encode('utf8')
                     if rl not in report_lines:
                         if not_translated in rl:
                             # Add line for review
