@@ -81,10 +81,10 @@ if __name__ == "__main__":
                                    echo=False)
 
     # Set-up files and remove previous version of the file.
-    fn_stats = os.path.join(cfg['Main']['reportdir'],
-                            "{fn} - Stats {now}.csv".format(fn=my_env.get_modulename(__file__), now=now))
-    fn_ok = os.path.join(cfg['Main']['reportdir'], "Validatie_tabel_procedures {now}.xlsx".format(now=now))
-    fn_nok = os.path.join(cfg['Main']['reportdir'], "Procedures_ontbrekende_documenten {now}.xlsx".format(now=now))
+    repname = "Archief Combinataties"
+    fn_stats = os.path.join(cfg['Main']['reportdir'], "Stats {r} {now}.csv".format(r=repname, now=now))
+    fn_ok = os.path.join(cfg['Main']['reportdir'], "{r} Validatie {now}.xlsx".format(r=repname, now=now))
+    fn_nok = os.path.join(cfg['Main']['reportdir'], "{r} Ontbrekend {now}.xlsx".format(r=repname, now=now))
     for fn in [fn_stats, fn_ok, fn_nok]:
         try:
             if os.path.isfile(fn):

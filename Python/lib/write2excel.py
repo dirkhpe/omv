@@ -82,9 +82,13 @@ class Write2Excel:
         elif ('Samenstellen' in content['arfase']) or ('Dossier' in content['arstap']):
             # Fase: Eerste Aanleg - Stap: Samenstellen of Indienen Dossier.
             bg_color = 'FFFF00'     # Yellow
-        else:
-            # Fase: Eerste Aanleg - Behandeling
+        elif 'Uitvoeren' in content['arfase']:
+            # Fase: Uitvoeren
+            bg_color = '00B0F0'  # Blue
+        elif 'Eerste Aanleg' in content['arfase']:
             bg_color = '92D050'     # Green
+        else:
+            bg_color = 'FF0000'  # Red
 
         fill_cell = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
         self.rowcnt += 1
@@ -111,7 +115,6 @@ class Write2Excel:
             bg_color = '92D050'  # Green
         else:
             logging.error("Unexpected UpFase {uf}, no colouring...".format(uf=content['upfase']))
-            # Fase: Eerste Aanleg - Behandeling
             bg_color = 'FF0000'  # Green
 
         fill_cell = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
@@ -196,7 +199,7 @@ def initialize_sheet(ws):
     # Create Title Row 2
     bg_color = 'D9D9D9'
     fill_r2 = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
-    title_row = ['decreet', 'besluit', 'stap', 'document - archief', 'document -loket', 'gebeurtenis']
+    title_row = ['decreet', 'besluit', 'stap', 'document - archief', 'document - loket', 'gebeurtenis']
     row = 2
     for pos in range(len(title_row)):
         col = pos + 1

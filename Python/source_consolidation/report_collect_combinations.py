@@ -29,10 +29,10 @@ if __name__ == "__main__":
                                    user=cfg["ConsolidationDB"]["user"],
                                    pwd=cfg["ConsolidationDB"]["pwd"])
 
-    fn_stats = os.path.join(cfg['Main']['reportdir'],
-                            "{fn} - Stats {now}.csv".format(fn=my_env.get_modulename(__file__), now=now))
-    fn_ok = os.path.join(cfg['Main']['reportdir'],
-                         "Consolidatie DossierType Document {now}.xlsx".format(now=now))
+    repname = 'Consolidatie OMER Type naar Doc'
+    fn_stats = os.path.join(cfg['Main']['reportdir'], "Stats {r} {now}.csv".format(r=repname, now=now))
+    fn_ok = os.path.join(cfg['Main']['reportdir'], "{r} {now}.xlsx".format(r=repname, now=now))
+
     for fn in [fn_stats, fn_ok]:
         try:
             if os.path.isfile(fn):
@@ -42,6 +42,9 @@ if __name__ == "__main__":
             sys.exit(1)
     ws = write2excel.Write2Excel()
     ws.init_sheet_cons('Consolidatie')
+
+    fh_stats = open(fn_stats, 'w')
+    fh_stats.write("bron;records\n")
 
     # Get Samenstellen Dossier - Handeling-Voorwerp (Green Path)
     logging.info("Samenstellen Dossier - Handeling - Voorwerp")
@@ -66,6 +69,7 @@ if __name__ == "__main__":
         )
         ws.write_line_report_combis(combi_dict)
     logging.info("Bron: {b} - {ra} Records toegevoegd".format(b=bron, ra=len(recs)))
+    fh_stats.write("{b};{ra}\n".format(b=bron, ra=len(recs)))
 
     # Get Samenstellen Dossier - Functie (Blue Path)
     logging.info("Samenstellen Dossier - Handeling - Voorwerp - Functie")
@@ -87,6 +91,7 @@ if __name__ == "__main__":
         )
         ws.write_line_report_combis(combi_dict)
     logging.info("Bron: {b} - {ra} Records toegevoegd".format(b=bron, ra=len(recs)))
+    fh_stats.write("{b};{ra}\n".format(b=bron, ra=len(recs)))
 
     # Get Samenstellen Dossier - Vaste Documenten (Lila Path)
     logging.info("Vast")
@@ -108,6 +113,7 @@ if __name__ == "__main__":
         )
         ws.write_line_report_combis(combi_dict)
     logging.info("Bron: {b} - {ra} Records toegevoegd".format(b=bron, ra=len(recs)))
+    fh_stats.write("{b};{ra}\n".format(b=bron, ra=len(recs)))
 
     # Get Samenstellen Dossier - Milieuvergunning (Yellow Path)
     logging.info("Samenstellen Dossier - Milieuvergunning")
@@ -129,6 +135,7 @@ if __name__ == "__main__":
         )
         ws.write_line_report_combis(combi_dict)
     logging.info("Bron: {b} - {ra} Records toegevoegd".format(b=bron, ra=len(recs)))
+    fh_stats.write("{b};{ra}\n".format(b=bron, ra=len(recs)))
 
     # Get Proces Dossier (Orange Path)
     logging.info("Proces Dossiers")
@@ -149,7 +156,9 @@ if __name__ == "__main__":
         )
         ws.write_line_report_combis(combi_dict)
     logging.info("Bron: {b} - {ra} Records toegevoegd".format(b=bron, ra=len(recs)))
+    fh_stats.write("{b};{ra}\n".format(b=bron, ra=len(recs)))
 
-    ws.close_workbook_cons(filename=fn)
+    ws.close_workbook_cons(filename=fn_ok)
+    fh_stats.close()
 
     logging.info('End Application')

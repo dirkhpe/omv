@@ -47,13 +47,17 @@ def list_of_tx2ar(omcomp, comp_id, prev_comp=None):
 
 def gebeurtenis2stap(gebeurtenis_id, prev_comp=None):
     """
-    This function will translate the gebeurtenis to upstap. Then list_of_tx2ar is called for further translation.
+    This function will translate the gebeurtenis to upstap. Then list_of_tx2ar is called to translate upstap to the
+    different arstap values.
 
     :param gebeurtenis_id: ID of the gebeurtenis
 
     :param prev_comp: If higher-level component is not translated, then this component does not need to be translated.
 
-    :return:
+    :return: List of arstap names that are via upstap name associated with gebeurtenis.
+
+
+
     """
     if prev_comp != not_translated:
         upgeb = cons_sess.query(UpGebeurtenis).filter_by(id=gebeurtenis_id).one()
@@ -83,10 +87,10 @@ if __name__ == "__main__":
                                    echo=False)
 
     # Set-up files and remove previous version of the file.
-    fn_stats = os.path.join(cfg['Main']['reportdir'], "{fn} - Stats {now}.csv"
-                            .format(fn=my_env.get_modulename(__file__), now=now))
-    fn_ok = os.path.join(cfg['Main']['reportdir'], "omer_combis {now}.xlsx".format(now=now))
-    fn_nok = os.path.join(cfg['Main']['reportdir'], "omer_combis_check {now}.xlsx".format(now=now))
+    repname = "OMER naar Archief"
+    fn_stats = os.path.join(cfg['Main']['reportdir'], "Stats {r} {now}.csv".format(r=repname, now=now))
+    fn_ok = os.path.join(cfg['Main']['reportdir'], "{r} Validatie {now}.xlsx".format(r=repname, now=now))
+    fn_nok = os.path.join(cfg['Main']['reportdir'], "{r} Ontbrekend {now}.xlsx".format(r=repname, now=now))
     for fn in [fn_stats, fn_ok, fn_nok]:
         try:
             if os.path.isfile(fn):
@@ -96,7 +100,7 @@ if __name__ == "__main__":
             sys.exit(1)
 
     fh_stats = open(fn_stats, 'w')
-    stats_line = "Dossiertype;Fase;Records;Duplicates;OK;Review\n"
+    stats_line = "Dossiertype;Records;Duplicates;OK;Review\n"
     fh_stats.write(stats_line)
 
     # Get translations for DossierType, less than 32 characters to fit as a tab-title.
@@ -125,6 +129,9 @@ if __name__ == "__main__":
 
         # print("Query: {q}".format(q=str(query)))
         report_lines = []
+        dup_cnt = 0
+        fh_ok_cnt = 0
+        fh_nok_cnt = 0
 
         for rec in query:
             uptype = rec.uptype.naam
@@ -142,17 +149,22 @@ if __name__ == "__main__":
                                    besluit=besluit
                                    )
                     rl = [rl_dict[k].lower() for k in list(rl_dict)]
-                    if rl not in report_lines:
+                    if rl in report_lines:
+                        dup_cnt += 1
+                    else:
                         if not_translated in rl:
                             # Add line for review
                             ws_nok.write_line4omer(rl_dict)
+                            fh_nok_cnt += 1
                         else:
                             # All information available, line is OK!
                             ws_ok.write_line4omer(rl_dict)
-                            # m = hashlib.md5()
-                            # m.update(rl)
-                            # logging.debug("{h} - {rl}".format(h=m.hexdigest(), rl=rl_arr))
+                            fh_ok_cnt += 1
                         report_lines.append(rl)
+
+        stats_line = "{type};{l};{dc};{ok};{nok}\n"\
+            .format(type=ws_title, l=len(report_lines), dc=dup_cnt, ok=fh_ok_cnt, nok=fh_nok_cnt)
+        fh_stats.write(stats_line)
 
     fh_stats.close()
     ws_ok.close_workbook(filename=fn_ok)
