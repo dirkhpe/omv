@@ -1,5 +1,6 @@
 """
-This script will collect the different combinations of dossiertype - fase - gebeurtenis - document.
+This script will collect the different combinations of dossiertype - fase - gebeurtenis - document to populate the table
+omercombi.
 
 """
 # Allow lib to library import path.

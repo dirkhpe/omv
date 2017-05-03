@@ -20,7 +20,7 @@ not_translated = " . "
 prop_lines = []
 
 
-def list_of_tx2ar(omcomp, comp_id, prev_comp=None):
+def list_of_tx2ar(omcomp, comp_id, rel_table=None, prev_comp_id=None):
     """
     This function will get all the translations for a specific Omer component. In case there is one or more
     translation in the Archief, a list of all translations will be provided.
@@ -31,40 +31,55 @@ def list_of_tx2ar(omcomp, comp_id, prev_comp=None):
 
     :param comp_id: ID for the OMER component
 
-    :param prev_comp: If higher-level component is not translated, then this component does not need to be translated
+    :param rel_table: Archief Relation class (table) from higher level component to required component. None for Type.
 
-    :return: List of translations.
+    :param prev_comp_id: If higher-level component is not translated, then this component does not need to be
+    translated. If the higher-level component is translated, then I need the ID of the higher-level component. This
+    (lower-level) component must be in the list of possibilities (arfase2type, arstap2fase, ardocument2stap). The list
+    of translations must be the cross-cut of Archief possibilities and Uitwisselingsplatform to Archief possibilities.
+
+    :return: List of translations, in tuples (component ID, component name)
     """
     list_tx = []
-    if prev_comp != not_translated:
+    if prev_comp_id != -1:
+        # Limit the list of component possibilities. They must be in the Archief possibilities.
+        # Limit this list for all components below Type.
+        if rel_table:
+            qry = cons_sess.query(rel_table).filter_by(target_id=prev_comp_id)
+            item_ids = [item.source_id for item in qry.all()]
         for arcomps in cons_sess.query(omcomp).filter_by(id=comp_id).filter(omcomp.arcomps.any()):
             for arcomp in arcomps.arcomps:
-                list_tx.append(arcomp.naam)
+                if rel_table:
+                    if arcomp.id in item_ids:
+                        list_tx.append((arcomp.id, arcomp.naam))
+                else:
+                    # Relation table does not exist, so must be Type. Accept the translation
+                    list_tx.append((arcomp.id, arcomp.naam))
     if len(list_tx) == 0:
-        list_tx.append(not_translated)
+        list_tx.append((-1, not_translated))
     return list_tx
 
 
-def gebeurtenis2stap(gebeurtenis_id, prev_comp=None):
+def gebeurtenis2stap(gebeurtenis_id, prev_comp_id=None):
     """
-    This function will translate the gebeurtenis to upstap. Then list_of_tx2ar is called to translate upstap to the
-    different arstap values.
+    This function will translate the gebeurtenis to upstap and returns a list of upstap_ids that can be used in
+    list_of_tx2ar, to go from upstap to arstap.
 
     :param gebeurtenis_id: ID of the gebeurtenis
 
-    :param prev_comp: If higher-level component is not translated, then this component does not need to be translated.
+    :param prev_comp_id: If higher-level component is not translated, then this component does not need to be
+    translated.
 
-    :return: List of arstap names that are via upstap name associated with gebeurtenis.
+    :return: upstap_id associated with the gebeurtenis.
 
 
 
     """
-    if prev_comp != not_translated:
+    if prev_comp_id != -1:
         upgeb = cons_sess.query(UpGebeurtenis).filter_by(id=gebeurtenis_id).one()
         if upgeb.upstap:
-            upstap_id = upgeb.upstap.id
-            return list_of_tx2ar(UpStap, upstap_id, prev_comp)
-    return [not_translated]
+            return upgeb.upstap.id, upgeb.upstap.naam
+    return -1, not_translated
 
 
 if __name__ == "__main__":
@@ -100,7 +115,7 @@ if __name__ == "__main__":
             sys.exit(1)
 
     fh_stats = open(fn_stats, 'w')
-    stats_line = "Dossiertype;Records;Duplicates;OK;Review\n"
+    stats_line = "Dossiertype;Records;Duplicates;Behandelen OK;Behandelen Review;Dossier OK;Dossier Review\n"
     fh_stats.write(stats_line)
 
     # Get translations for DossierType, less than 32 characters to fit as a tab-title.
@@ -111,14 +126,13 @@ if __name__ == "__main__":
     # First get query based on DossierType
     for uptype in cons_sess.query(UpType).order_by(UpType.naam).all():
 
-        # Each uptype translates to 0 or 1 artypes.
+        # Each uptype translates to 0 or 1 artypes, so no need to implement for-loop.
         artypes = list_of_tx2ar(UpType, uptype.id)
-        if artypes[0] == not_translated:
+        if artypes[0][1] == not_translated:
             logging.info("DossierType niet gevonden, werk met {dt}".format(dt=uptype.naam))
             ws_title = "{id} {n}".format(id=uptype.id, n=uptype.naam.lower())[:31]
-            artype = not_translated
         else:
-            artype = artypes[0]
+            artype = artypes[0][1]
             logging.info("DossierType gevonden, werk met {dt}".format(dt=artype))
             ws_title = tx_type[artype.lower()]
 
@@ -132,17 +146,24 @@ if __name__ == "__main__":
         dup_cnt = 0
         fh_ok_cnt = 0
         fh_nok_cnt = 0
+        fh_ok_dossier_cnt = 0
+        fh_nok_dossier_cnt = 0
 
         for rec in query:
             uptype = rec.uptype.naam
             upfase = rec.upfase.naam
             upgebeurtenis = rec.upgebeurtenis.naam
             updocument = rec.updocument.naam
-            for arstap in gebeurtenis2stap(rec.upgebeurtenis.id, upfase):
-                for ardoc in list_of_tx2ar(UpDocument, rec.updocument.id, arstap):
+            # Additional step to get ArFase ID.
+            arfases = list_of_tx2ar(UpFase, rec.upfase_id, ArFase2Type, artypes[0][0])
+            arfase = arfases[0][1]
+            arfase_id = arfases[0][0]
+            (upstap_id, upstap_naam) = gebeurtenis2stap(rec.upgebeurtenis.id, upfase)
+            for arstap in list_of_tx2ar(UpStap, upstap_id, ArStap2Fase, arfase_id):
+                for ardoc in list_of_tx2ar(UpDocument, rec.updocument.id, ArDocument2Stap, arstap[0]):
                     rl_dict = dict(upfase=upfase,
-                                   arstap=arstap,
-                                   ardoc=ardoc,
+                                   arstap=arstap[1],
+                                   ardoc=ardoc[1],
                                    gebeurtenis=upgebeurtenis,
                                    updoc=updocument,
                                    decreet=decreet,
@@ -155,15 +176,22 @@ if __name__ == "__main__":
                         if not_translated in rl:
                             # Add line for review
                             ws_nok.write_line4omer(rl_dict)
-                            fh_nok_cnt += 1
+                            if upgebeurtenis == 'Starten van een nieuw dossier':
+                                fh_nok_dossier_cnt += 1
+                            else:
+                                fh_nok_cnt += 1
                         else:
                             # All information available, line is OK!
                             ws_ok.write_line4omer(rl_dict)
-                            fh_ok_cnt += 1
+                            if upgebeurtenis == 'Starten van een nieuw dossier':
+                                fh_ok_dossier_cnt += 1
+                            else:
+                                fh_ok_cnt += 1
                         report_lines.append(rl)
 
-        stats_line = "{type};{l};{dc};{ok};{nok}\n"\
-            .format(type=ws_title, l=len(report_lines), dc=dup_cnt, ok=fh_ok_cnt, nok=fh_nok_cnt)
+        stats_line = "{type};{l};{dc};{ok};{nok};{dok};{dnok}\n"\
+            .format(type=ws_title, l=len(report_lines), dc=dup_cnt, ok=fh_ok_cnt, nok=fh_nok_cnt,
+                    dok=fh_ok_dossier_cnt, dnok=fh_nok_dossier_cnt)
         fh_stats.write(stats_line)
 
     fh_stats.close()

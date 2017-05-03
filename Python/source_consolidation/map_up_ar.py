@@ -144,8 +144,12 @@ def handle_stappen(worksheet):
     """
     This procedure will handle the worksheet 'Stappen' to link Archief Stappen with the codes from
     Uitwisselingsplatform.
-    @param worksheet: Pointer to the Stappen worksheet.
-    @return:
+    ProcedureStap 'PROCEDURESTAP NOT FOUND' is not included in the mapping table (otherwise gebeurtenissen will be
+    incorrectly linked to ArStappen if 'PROCEDURESTAP NOT FOUND' in both cases.
+
+    :param worksheet: Pointer to the Stappen worksheet.
+
+    :return:
     """
     logging.info("Handling Stappen")
     # Convert worksheet info to list of rows.
@@ -157,19 +161,20 @@ def handle_stappen(worksheet):
     for row in map(nr._make, row_list):
         procedurestap = row.ProcedureStap.value
         protege_id = row.protege_id.value
-        try:
-            upstap_id = stappen[procedurestap]
-        except KeyError:
-            upstap = cons_sess.query(UpStap).filter_by(naam=procedurestap).one()
-            stappen[procedurestap] = upstap.id
-            upstap_id = stappen[procedurestap]
-        arstap = cons_sess.query(ArStap).filter_by(protege_id=protege_id).one()
-        arstap_id = arstap.id
-        arstap2upstap = ArStap2UpStap(
-            arstap_id=arstap_id,
-            upstap_id=upstap_id
-        )
-        cons_sess.add(arstap2upstap)
+        if procedurestap != 'PROCEDURESTAP NOT FOUND':
+            try:
+                upstap_id = stappen[procedurestap]
+            except KeyError:
+                upstap = cons_sess.query(UpStap).filter_by(naam=procedurestap).one()
+                stappen[procedurestap] = upstap.id
+                upstap_id = stappen[procedurestap]
+            arstap = cons_sess.query(ArStap).filter_by(protege_id=protege_id).one()
+            arstap_id = arstap.id
+            arstap2upstap = ArStap2UpStap(
+                arstap_id=arstap_id,
+                upstap_id=upstap_id
+            )
+            cons_sess.add(arstap2upstap)
     return
 
 

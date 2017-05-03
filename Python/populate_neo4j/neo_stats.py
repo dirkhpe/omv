@@ -19,10 +19,10 @@ class TestNeoStore(unittest.TestCase):
     def test_contents(self):
         nodes = {
                 'Dossiertype': 14,
-                'ProcedureFase': 20,
-                'ProcedureStap': 33,
-                'Document': 214,
-                'Artikel': 86,
+                'ProcedureFase': 21,
+                'ProcedureStap': 36,
+                'Document': 217,
+                'Artikel': 90,
                 'Boek': 2,
                 'Titel': 10,
                 'Hoofdstuk': 46,
