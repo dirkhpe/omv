@@ -19,9 +19,9 @@ class TestNeoStore(unittest.TestCase):
     def test_contents(self):
         nodes = {
                 'Dossiertype': 14,
-                'ProcedureFase': 21,
-                'ProcedureStap': 36,
-                'Document': 217,
+                'ProcedureFase': 22,
+                'ProcedureStap': 37,
+                'Document': 235,
                 'Artikel': 90,
                 'Boek': 2,
                 'Titel': 10,

@@ -150,44 +150,52 @@ if __name__ == "__main__":
         fh_nok_dossier_cnt = 0
 
         for rec in query:
+            valid_tx_found = False
             uptype = rec.uptype.naam
             upfase = rec.upfase.naam
             upgebeurtenis = rec.upgebeurtenis.naam
             updocument = rec.updocument.naam
             # Additional step to get ArFase ID.
-            arfases = list_of_tx2ar(UpFase, rec.upfase_id, ArFase2Type, artypes[0][0])
-            arfase = arfases[0][1]
-            arfase_id = arfases[0][0]
             (upstap_id, upstap_naam) = gebeurtenis2stap(rec.upgebeurtenis.id, upfase)
-            for arstap in list_of_tx2ar(UpStap, upstap_id, ArStap2Fase, arfase_id):
-                for ardoc in list_of_tx2ar(UpDocument, rec.updocument.id, ArDocument2Stap, arstap[0]):
-                    rl_dict = dict(upfase=upfase,
-                                   arstap=arstap[1],
-                                   ardoc=ardoc[1],
-                                   gebeurtenis=upgebeurtenis,
-                                   updoc=updocument,
-                                   decreet=decreet,
-                                   besluit=besluit
-                                   )
-                    rl = [rl_dict[k].lower() for k in list(rl_dict)]
-                    if rl in report_lines:
-                        dup_cnt += 1
-                    else:
-                        if not_translated in rl:
-                            # Add line for review
-                            ws_nok.write_line4omer(rl_dict)
-                            if upgebeurtenis == 'Starten van een nieuw dossier':
-                                fh_nok_dossier_cnt += 1
-                            else:
-                                fh_nok_cnt += 1
+            for (arfase_id, arfase_naam) in list_of_tx2ar(UpFase, rec.upfase_id, ArFase2Type, artypes[0][0]):
+                for (arstap_id, arstap_naam) in list_of_tx2ar(UpStap, upstap_id, ArStap2Fase, arfase_id):
+                    for (ardoc_id, ardoc_naam) in list_of_tx2ar(UpDocument, rec.updocument.id,
+                                                                ArDocument2Stap, arstap_id):
+                        rl_dict = dict(arfase=arfase_naam,
+                                       upfase=upfase,
+                                       arstap=arstap_naam,
+                                       ardoc=ardoc_naam,
+                                       gebeurtenis=upgebeurtenis,
+                                       updoc=updocument,
+                                       decreet=decreet,
+                                       besluit=besluit
+                                       )
+                        rl = [rl_dict[k].lower() for k in list(rl_dict)]
+                        if rl in report_lines:
+                            dup_cnt += 1
+                            # If this is a duplicate line, then the line has been written already to valid/invalid file.
+                            # Don't write the duplicate line again.
+                            # Be careful - bit fishy...
+                            valid_tx_found = True
                         else:
-                            # All information available, line is OK!
-                            ws_ok.write_line4omer(rl_dict)
-                            if upgebeurtenis == 'Starten van een nieuw dossier':
-                                fh_ok_dossier_cnt += 1
-                            else:
-                                fh_ok_cnt += 1
-                        report_lines.append(rl)
+                            if not_translated not in rl:
+                                # All information available, line is OK!
+                                valid_tx_found = True
+                                ws_ok.write_line4omer(rl_dict)
+                                if upgebeurtenis == 'Starten van een nieuw dossier':
+                                    fh_ok_dossier_cnt += 1
+                                else:
+                                    fh_ok_cnt += 1
+                            report_lines.append(rl)
+            # End of processing for this record in omercombi. If no valid translations found, then write the last
+            # invalid record.
+            if not valid_tx_found:
+                # rl_dict needs to be defined. If not, program logic error is accepted and needs to be investigated.
+                ws_nok.write_line4omer(rl_dict)
+                if upgebeurtenis == 'Starten van een nieuw dossier':
+                    fh_nok_dossier_cnt += 1
+                else:
+                    fh_nok_cnt += 1
 
         stats_line = "{type};{l};{dc};{ok};{nok};{dok};{dnok}\n"\
             .format(type=ws_title, l=len(report_lines), dc=dup_cnt, ok=fh_ok_cnt, nok=fh_nok_cnt,

@@ -182,8 +182,10 @@ def handle_documenten(worksheet):
     """
     This procedure will handle the worksheet 'Document' to link Archief Document with the codes from
     Uitwisselingsplatform.
-    @param worksheet: Pointer to the Document worksheet.
-    @return:
+
+    :param worksheet: Pointer to the Document worksheet.
+
+    :return:
     """
     logging.info("Handling Documenten")
     # Convert worksheet info to list of rows.
@@ -214,6 +216,7 @@ def handle_documenten(worksheet):
                 updocument_id=updocument_id
             )
             cons_sess.add(ardocument2updocument)
+    cons_sess.commit()
     return
 
 
