@@ -55,6 +55,19 @@ class Write2Excel:
         self.rowcnt = 2
         return self.current_sheet
 
+    def init_sheet_cons_stap(self, title):
+        """
+        Initialize the worksheet for Consolidation.
+
+        :param title: mandatory title for the worksheet
+
+        :return: worksheet object
+        """
+        self.current_sheet.title = title
+        initialize_sheet_report_combis_stap(self.current_sheet)
+        self.rowcnt = 2
+        return self.current_sheet
+
     def close_workbook(self, filename):
         """
         This method will finalize the current sheet and close the file.
@@ -72,6 +85,16 @@ class Write2Excel:
         :return:
         """
         finalize_sheet_cons(self.current_sheet, self.rowcnt)
+        self.wb.save(filename=filename)
+        return
+
+    def close_workbook_cons_stap(self, filename):
+        """
+        This method will finalize the current sheet and close the file.
+        :param filename:
+        :return:
+        """
+        finalize_sheet_cons_stap(self.current_sheet, self.rowcnt)
         self.wb.save(filename=filename)
         return
 
@@ -96,9 +119,11 @@ class Write2Excel:
         self.current_sheet[rc2a1(self.rowcnt, 2)] = content['besluit']
         self.current_sheet[rc2a1(self.rowcnt, 3)] = content['arstap']
         self.current_sheet[rc2a1(self.rowcnt, 4)] = content['ardoc']
-        self.current_sheet[rc2a1(self.rowcnt, 5)] = content['updoc']
-        self.current_sheet[rc2a1(self.rowcnt, 6)] = content['gebeurtenis']
-        for cnt in range(1, 7):
+        self.current_sheet[rc2a1(self.rowcnt, 5)] = content['updoc_code']
+        self.current_sheet[rc2a1(self.rowcnt, 6)] = content['updoc']
+        self.current_sheet[rc2a1(self.rowcnt, 7)] = content['upgeb_code']
+        self.current_sheet[rc2a1(self.rowcnt, 8)] = content['gebeurtenis']
+        for cnt in range(1, 9):
             self.current_sheet[rc2a1(self.rowcnt, cnt)].fill = fill_cell
         return
 
@@ -123,9 +148,11 @@ class Write2Excel:
         self.current_sheet[rc2a1(self.rowcnt, 2)] = content['besluit']
         self.current_sheet[rc2a1(self.rowcnt, 3)] = content['arstap']
         self.current_sheet[rc2a1(self.rowcnt, 4)] = content['ardoc']
-        self.current_sheet[rc2a1(self.rowcnt, 5)] = content['updoc']
-        self.current_sheet[rc2a1(self.rowcnt, 6)] = content['gebeurtenis']
-        for cnt in range(1, 7):
+        self.current_sheet[rc2a1(self.rowcnt, 5)] = content['updoc_code']
+        self.current_sheet[rc2a1(self.rowcnt, 6)] = content['updoc']
+        self.current_sheet[rc2a1(self.rowcnt, 7)] = content['upgeb_code']
+        self.current_sheet[rc2a1(self.rowcnt, 8)] = content['gebeurtenis']
+        for cnt in range(1, 9):
             self.current_sheet[rc2a1(self.rowcnt, cnt)].fill = fill_cell
         return
 
@@ -163,6 +190,41 @@ class Write2Excel:
             self.current_sheet[rc2a1(self.rowcnt, cnt)].fill = fill_cell
         return
 
+    def write_line_report_combis_stap(self, content):
+        """
+        This function will write a line for each unique combination per source.
+        :param self:
+        :param content:
+        :return:
+        """
+        if 'HanVwpFun' in content['bron']:
+            bg_color = '00B0F0'  # Blue
+        elif 'HanVwp' in content['bron']:
+            bg_color = '92D050'  # Green
+        elif 'Vast' in content['bron']:
+            bg_color = 'FFD1DC'
+        elif 'Milieu' in content['bron']:
+            bg_color = 'FFFF00'  # Yellow
+        else:
+            bg_color = 'FFC000'  # Orange
+
+        fill_cell = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
+        self.rowcnt += 1
+        self.current_sheet[rc2a1(self.rowcnt, 1)] = content['bron']
+        self.current_sheet[rc2a1(self.rowcnt, 2)] = content['dt_code']
+        self.current_sheet[rc2a1(self.rowcnt, 3)] = content['dt_naam']
+        self.current_sheet[rc2a1(self.rowcnt, 4)] = content['f_code']
+        self.current_sheet[rc2a1(self.rowcnt, 5)] = content['f_naam']
+        self.current_sheet[rc2a1(self.rowcnt, 6)] = content['g_code']
+        self.current_sheet[rc2a1(self.rowcnt, 7)] = content['g_naam']
+        self.current_sheet[rc2a1(self.rowcnt, 8)] = content['s_naam']
+        self.current_sheet[rc2a1(self.rowcnt, 9)] = content['d_type']
+        self.current_sheet[rc2a1(self.rowcnt, 10)] = content['d_code']
+        self.current_sheet[rc2a1(self.rowcnt, 11)] = content['d_naam']
+        for cnt in range(1, 12):
+            self.current_sheet[rc2a1(self.rowcnt, cnt)].fill = fill_cell
+        return
+
 
 def initialize_sheet(ws):
     # Set column width
@@ -170,8 +232,10 @@ def initialize_sheet(ws):
     ws.column_dimensions[get_column_letter(2)].width = 10
     ws.column_dimensions[get_column_letter(3)].width = 32
     ws.column_dimensions[get_column_letter(4)].width = 72
-    ws.column_dimensions[get_column_letter(5)].width = 72
-    ws.column_dimensions[get_column_letter(6)].width = 100
+    ws.column_dimensions[get_column_letter(5)].width = 32
+    ws.column_dimensions[get_column_letter(6)].width = 72
+    ws.column_dimensions[get_column_letter(7)].width = 40
+    ws.column_dimensions[get_column_letter(8)].width = 100
 
     # Set row height
     ws.row_dimensions[1].height = 24
@@ -182,7 +246,7 @@ def initialize_sheet(ws):
     fill_r1 = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
     ws.merge_cells('A1:B1')
     ws.merge_cells('C1:D1')
-    ws.merge_cells('E1:F1')
+    ws.merge_cells('E1:H1')
     ws['A1'] = 'Wetgeving Artikels'
     ws['C1'] = 'Register'
     ws['E1'] = 'Omgevingsloket'
@@ -199,7 +263,8 @@ def initialize_sheet(ws):
     # Create Title Row 2
     bg_color = 'D9D9D9'
     fill_r2 = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
-    title_row = ['decreet', 'besluit', 'stap', 'document - archief', 'document - loket', 'gebeurtenis']
+    title_row = ['decreet', 'besluit', 'stap', 'document - archief', 'document code',
+                 'document - loket', 'gebeurtenis code', 'gebeurtenis']
     row = 2
     for pos in range(len(title_row)):
         col = pos + 1
@@ -266,15 +331,78 @@ def initialize_sheet_report_combis(ws):
         set_bold(ws[rc2a1(row, col)])
 
 
+def initialize_sheet_report_combis_stap(ws):
+    # Set column width
+    ws.column_dimensions[get_column_letter(1)].width = 12
+    ws.column_dimensions[get_column_letter(2)].width = 28
+    ws.column_dimensions[get_column_letter(3)].width = 32
+    ws.column_dimensions[get_column_letter(4)].width = 28
+    ws.column_dimensions[get_column_letter(5)].width = 32
+    ws.column_dimensions[get_column_letter(6)].width = 28
+    ws.column_dimensions[get_column_letter(7)].width = 32
+    ws.column_dimensions[get_column_letter(8)].width = 32
+    ws.column_dimensions[get_column_letter(9)].width = 11
+    ws.column_dimensions[get_column_letter(10)].width = 28
+    ws.column_dimensions[get_column_letter(11)].width = 64
+
+    # Set row height
+    ws.row_dimensions[1].height = 24
+    ws.row_dimensions[2].height = 24
+
+    # Create Title Row 1
+    bg_color = 'BFBFBF'
+    fill_r1 = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
+    ws.merge_cells('A1:A2')
+    ws.merge_cells('B1:C1')
+    ws.merge_cells('D1:E1')
+    ws.merge_cells('F1:G1')
+    ws.merge_cells('I1:K1')
+    ws['A1'] = 'Bron'
+    ws['B1'] = 'Dossier Type'
+    ws['D1'] = 'Fase'
+    ws['F1'] = 'Gebeurtenis'
+    ws['H1'] = 'Stap'
+    ws['I1'] = 'Document'
+    ws['A1'].fill = fill_r1
+    ws['B1'].fill = fill_r1
+    ws['D1'].fill = fill_r1
+    ws['F1'].fill = fill_r1
+    ws['H1'].fill = fill_r1
+    ws['I1'].fill = fill_r1
+    set_bold(ws['A1'])
+    set_bold(ws['B1'])
+    set_bold(ws['D1'])
+    set_bold(ws['F1'])
+    set_bold(ws['H1'])
+    set_bold(ws['I1'])
+    ws['A1'].alignment = Alignment(horizontal='center', vertical='bottom')
+    ws['B1'].alignment = Alignment(horizontal='center')
+    ws['D1'].alignment = Alignment(horizontal='center')
+    ws['F1'].alignment = Alignment(horizontal='center')
+    ws['H1'].alignment = Alignment(horizontal='center')
+    ws['I1'].alignment = Alignment(horizontal='center')
+
+    # Create Title Row 2
+    bg_color = 'D9D9D9'
+    fill_r2 = PatternFill(start_color=bg_color, end_color=bg_color, fill_type='solid')
+    title_row = ['Code', 'Naam', 'Code', 'Naam', 'Code', 'Naam', 'Stap', 'Type', 'Code', 'Naam']
+    row = 2
+    for pos in range(len(title_row)):
+        col = pos + 2
+        ws[rc2a1(row, col)] = title_row[pos]
+        ws[rc2a1(row, col)].fill = fill_r2
+        set_bold(ws[rc2a1(row, col)])
+
+
 def finalize_sheet(ws, nr_rows):
     thin_border = Border(left=Side(style='thin'),
                          right=Side(style='thin'),
                          top=Side(style='thin'),
                          bottom=Side(style='thin'))
-    for row in ws["A1:F{rc}".format(rc=nr_rows)]:
+    for row in ws["A1:H{rc}".format(rc=nr_rows)]:
         for cell in row:
             cell.border = thin_border
-    ws.auto_filter.ref = "A2:F{rc}".format(rc=nr_rows)
+    ws.auto_filter.ref = "A2:H{rc}".format(rc=nr_rows)
     ws.freeze_panes = ws['A3']
 
 
@@ -287,6 +415,18 @@ def finalize_sheet_cons(ws, nr_rows):
         for cell in row:
             cell.border = thin_border
     ws.auto_filter.ref = "A2:J{rc}".format(rc=nr_rows)
+    ws.freeze_panes = ws['A3']
+
+
+def finalize_sheet_cons_stap(ws, nr_rows):
+    thin_border = Border(left=Side(style='thin'),
+                         right=Side(style='thin'),
+                         top=Side(style='thin'),
+                         bottom=Side(style='thin'))
+    for row in ws["A1:K{rc}".format(rc=nr_rows)]:
+        for cell in row:
+            cell.border = thin_border
+    ws.auto_filter.ref = "A2:K{rc}".format(rc=nr_rows)
     ws.freeze_panes = ws['A3']
 
 

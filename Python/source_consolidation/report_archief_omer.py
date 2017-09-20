@@ -36,15 +36,15 @@ def list_of_tx(arcomp, comp_id, prev_comp=None):
 
     :param prev_comp: If previous component is not translated, then this component does not need to be translated
 
-    :return: List of translations in tuple (name, ID).
+    :return: List of translations in tuple (name, ID, code).
     """
     list_tx = []
     if prev_comp != not_translated:
         for upcomps in cons_sess.query(arcomp).filter_by(id=comp_id).filter(arcomp.upcomps.any()):
             for upcomp in upcomps.upcomps:
-                list_tx.append((upcomp.naam, upcomp.id))
+                list_tx.append((upcomp.naam, upcomp.id, upcomp.code))
     if len(list_tx) == 0:
-        list_tx.append((not_translated, None))
+        list_tx.append((not_translated, None, None))
     return list_tx
 
 
@@ -104,10 +104,10 @@ if __name__ == "__main__":
         ws_nok.init_sheet(title=tx_type[artype.naam.lower()])
 
         # Find Fase, Stap / Gebeurtenis and Document
-        for (uptype, _) in list_of_tx(ArType, artype.id):
+        for (uptype, uptype_id, uptype_code) in list_of_tx(ArType, artype.id):
             for arfase in artype.fases:
-                fase_decreet, fase_besluit = my_env.get_artikels(cons_sess, ArFase, arfase.id)
-                for (upfase, _) in list_of_tx(ArFase, arfase.id, prev_comp=uptype):
+                # fase_decreet, fase_besluit = my_env.get_artikels(cons_sess, ArFase, arfase.id)
+                for (upfase, upfase_id, upfase_code) in list_of_tx(ArFase, arfase.id, prev_comp=uptype):
 
                     # Initialize Files and Statistics
 
@@ -118,21 +118,27 @@ if __name__ == "__main__":
 
                     for arstap2fase in cons_sess.query(ArFase).filter_by(id=arfase.id).filter(ArFase.stappen.any()):
                         for arstap in arstap2fase.stappen:
-                            stap_decreet, stap_besluit = my_env.get_artikels(cons_sess, ArStap, arstap.id)
+                            # stap_decreet, stap_besluit = my_env.get_artikels(cons_sess, ArStap, arstap.id)
                             for ardocument2stap in cons_sess.query(ArStap).filter_by(id=arstap.id)\
                                     .filter(ArStap.documenten.any()):
                                 for ardocument in ardocument2stap.documenten:
                                     doc_decreet, doc_besluit = my_env.get_artikels(cons_sess, ArDocument,
                                                                                    ardocument.id)
-                                    decreet = my_env.format_artikels(doc_decreet + stap_decreet + fase_decreet)
-                                    besluit = my_env.format_artikels(doc_besluit + stap_besluit + fase_besluit)
-                                    for (updocument, updoc_id) in list_of_tx(ArDocument,
-                                                                             ardocument.id, prev_comp=upfase):
-                                        for (gebeurtenis, _) in list_of_tx(UpDocument, updoc_id, prev_comp=updocument):
+                                    # decreet = my_env.format_artikels(doc_decreet + stap_decreet + fase_decreet)
+                                    # besluit = my_env.format_artikels(doc_besluit + stap_besluit + fase_besluit)
+                                    decreet = my_env.format_artikels(doc_decreet)
+                                    besluit = my_env.format_artikels(doc_besluit)
+                                    for (updocument, updoc_id, updoc_code) in list_of_tx(ArDocument,
+                                                                                         ardocument.id,
+                                                                                         prev_comp=upfase):
+                                        for (gebeurtenis, upgeb_id, upgeb_code) in list_of_tx(UpDocument, updoc_id,
+                                                                                              prev_comp=updocument):
                                             rl_dict = dict(arstap=arstap.naam,
                                                            ardoc=ardocument.naam,
                                                            gebeurtenis=gebeurtenis,
+                                                           upgeb_code=upgeb_code,
                                                            updoc=updocument,
+                                                           updoc_code=updoc_code,
                                                            decreet=decreet,
                                                            besluit=besluit,
                                                            arfase=arfase.naam)

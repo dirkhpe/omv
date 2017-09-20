@@ -15,7 +15,7 @@ if __name__ == "__main__":
     (filepath, filename) = os.path.split(__file__)
     # python_path = os.path.join(filepath, 'omv', 'Scripts', 'python')
     python_path = sys.executable
-    script = os.path.join(filepath, 'report_protege.py')
+    script = os.path.join(filepath, 'source_consolidation', 'report_protege.py')
     logging.info("Run Denormalized Reports script")
     res = subprocess.call([python_path, script], env=os.environ.copy())
     ns = neostore.NeoStore(cfg)

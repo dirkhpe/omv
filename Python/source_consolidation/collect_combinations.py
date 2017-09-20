@@ -106,6 +106,7 @@ if __name__ == "__main__":
     logging.info("Samenstellen Dossier - Milieuvergunning")
     bron = 'Milieu'
     recs = omdb.samenstellen_milieu_projecttype()
+    # recs = omdb.samenstellen_milieu_stuk_blok()
     for rec in recs:
         (uptype_id,) = cons_sess.query(UpType.id).filter_by(code=rec.uptype_code).one()
         query = cons_sess.query(UpDocument.id).filter_by(code=rec.updocument_code)

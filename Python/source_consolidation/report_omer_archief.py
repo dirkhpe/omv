@@ -154,7 +154,9 @@ if __name__ == "__main__":
             uptype = rec.uptype.naam
             upfase = rec.upfase.naam
             upgebeurtenis = rec.upgebeurtenis.naam
+            upgebeurtenis_code = rec.upgebeurtenis.code
             updocument = rec.updocument.naam
+            updocument_code = rec.updocument.code
             # Additional step to get ArFase ID.
             (upstap_id, upstap_naam) = gebeurtenis2stap(rec.upgebeurtenis.id, upfase)
             for (arfase_id, arfase_naam) in list_of_tx2ar(UpFase, rec.upfase_id, ArFase2Type, artypes[0][0]):
@@ -166,11 +168,13 @@ if __name__ == "__main__":
                                        arstap=arstap_naam,
                                        ardoc=ardoc_naam,
                                        gebeurtenis=upgebeurtenis,
+                                       upgeb_code=upgebeurtenis_code,
                                        updoc=updocument,
+                                       updoc_code = updocument_code,
                                        decreet=decreet,
                                        besluit=besluit
                                        )
-                        rl = [rl_dict[k].lower() for k in list(rl_dict)]
+                        rl = [rl_dict[k].lower() for k in list(rl_dict) if k != 'arfase']
                         if rl in report_lines:
                             dup_cnt += 1
                             # If this is a duplicate line, then the line has been written already to valid/invalid file.
